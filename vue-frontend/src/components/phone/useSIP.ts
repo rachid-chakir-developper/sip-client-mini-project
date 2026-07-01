@@ -8,6 +8,7 @@ import {
   RegistererState,
 } from 'sip.js'
 import type { Session } from 'sip.js'
+import { useRingbackTone } from './useRingbackTone'
 
 interface SIPCredentials {
   extension:    string
@@ -26,6 +27,8 @@ export function useSIP() {
   const speakerMuted  = ref(false)
   const callStartedAt = ref<number | null>(null)
   const answering     = ref(false)
+
+  const ringbackTone = useRingbackTone()
 
   const remoteAudio = document.createElement('audio')
   remoteAudio.autoplay = true
@@ -116,11 +119,13 @@ export function useSIP() {
 
     inviter.stateChange.addListener((state: SessionState) => {
       if (state === SessionState.Established) {
+        ringbackTone.stop()
         _attachAudio(inviter)
         status.value        = 'incall'
         callStartedAt.value = Date.now()
       }
       if (state === SessionState.Terminated) {
+        ringbackTone.stop()
         status.value         = 'registered'
         session.value        = null
         callStartedAt.value  = null
@@ -132,6 +137,10 @@ export function useSIP() {
 
     session.value = inviter
     status.value  = 'calling'
+    // Asterisk ne peut pas synthétiser la tonalité côté serveur pour un canal
+    // WebRTC (transcodage PCM → Opus indisponible sans codec payant) : la
+    // tonalité est donc générée localement pendant que l'appel sonne.
+    ringbackTone.start()
     await inviter.invite()
   }
 
@@ -160,6 +169,7 @@ export function useSIP() {
   }
 
   function stop(): void {
+    ringbackTone.stop()
     ua.value?.stop()
     ua.value      = null
     session.value = null
@@ -183,6 +193,7 @@ export function useSIP() {
   }
 
   onUnmounted(() => {
+    ringbackTone.stop()
     ua.value?.stop()
     if (remoteAudio.parentNode) document.body.removeChild(remoteAudio)
   })

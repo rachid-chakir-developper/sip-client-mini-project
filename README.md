@@ -28,8 +28,8 @@ Navigateur ── WebSocket SIP (ws://localhost:8088/ws) ──▶ Asterisk (PJS
 ## 1. Cloner le projet
 
 ```bash
-git clone <url-du-repo>
-cd "Nouveau dossier (2)"
+git clone https://github.com/rachid-chakir-developper/sip-client-mini-project.git
+cd "sip-client-mini-project"
 ```
 
 ## 2. Démarrer le backend (Django + Asterisk)
