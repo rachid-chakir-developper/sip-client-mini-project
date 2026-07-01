@@ -1,0 +1,58 @@
+{
+  "title": "SIP Phone",
+  "chooseAccount": "Choose your account",
+  "disconnect": "Disconnect",
+  "close": "Close",
+  "fabTitle": "Open the dial pad",
+  "connectingServer": "Connecting to the SIP server…",
+  "hintUseFab": "Use the call button in the bottom right to dial a number.",
+  "status": {
+    "disconnected": "Disconnected",
+    "registering": "Connecting…",
+    "registered": "Available",
+    "calling": "Calling",
+    "ringing": "Incoming call",
+    "incall": "In call"
+  },
+  "titles": {
+    "call": "Call",
+    "ringing": "Incoming call",
+    "calling": "Calling",
+    "incall": "In call"
+  },
+  "tabs": {
+    "recent": "Recent",
+    "keypad": "Keypad",
+    "contacts": "Contacts"
+  },
+  "recentEmpty": "No recent calls",
+  "dialer": {
+    "placeholder": "Dial a number",
+    "backspace": "Erase"
+  },
+  "contacts": {
+    "title": "Contacts",
+    "searchPlaceholder": "Search a contact…",
+    "empty": "No contacts"
+  },
+  "call": {
+    "unknownNumber": "Unknown number",
+    "incoming": "Incoming call",
+    "incomingEllipsis": "Incoming call…",
+    "inProgress": "Calling…",
+    "answer": "Answer",
+    "decline": "Decline",
+    "hangup": "Hang up",
+    "muteRingtone": "Silence ringtone",
+    "replyMessage": "Reply with message",
+    "muteMic": "Mute microphone",
+    "unmuteMic": "Unmute microphone",
+    "muteSpeaker": "Mute sound",
+    "unmuteSpeaker": "Unmute sound"
+  },
+  "errors": {
+    "loadUsers": "Unable to load users.",
+    "sipConnection": "SIP connection failed.",
+    "callFailed": "Unable to place the call."
+  }
+}

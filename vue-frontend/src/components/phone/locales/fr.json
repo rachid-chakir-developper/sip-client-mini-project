@@ -1,0 +1,58 @@
+{
+  "title": "SIP Phone",
+  "chooseAccount": "Choisissez votre compte",
+  "disconnect": "Déconnecter",
+  "close": "Fermer",
+  "fabTitle": "Ouvrir le clavier d'appel",
+  "connectingServer": "Connexion au serveur SIP…",
+  "hintUseFab": "Utilisez le bouton d'appel en bas à droite pour composer un numéro.",
+  "status": {
+    "disconnected": "Déconnecté",
+    "registering": "Connexion…",
+    "registered": "Disponible",
+    "calling": "Appel en cours",
+    "ringing": "Appel entrant",
+    "incall": "En communication"
+  },
+  "titles": {
+    "call": "Appeler",
+    "ringing": "Appel entrant",
+    "calling": "Appel en cours",
+    "incall": "En communication"
+  },
+  "tabs": {
+    "recent": "Récents",
+    "keypad": "Clavier",
+    "contacts": "Contacts"
+  },
+  "recentEmpty": "Aucun appel récent",
+  "dialer": {
+    "placeholder": "Composer un numéro",
+    "backspace": "Effacer"
+  },
+  "contacts": {
+    "title": "Contacts",
+    "searchPlaceholder": "Rechercher un contact…",
+    "empty": "Aucun contact"
+  },
+  "call": {
+    "unknownNumber": "Numéro inconnu",
+    "incoming": "Appel entrant",
+    "incomingEllipsis": "Appel entrant…",
+    "inProgress": "Appel en cours…",
+    "answer": "Décrocher",
+    "decline": "Refuser",
+    "hangup": "Raccrocher",
+    "muteRingtone": "Sonnerie silencieuse",
+    "replyMessage": "Répondre par message",
+    "muteMic": "Couper le micro",
+    "unmuteMic": "Réactiver le micro",
+    "muteSpeaker": "Couper le son",
+    "unmuteSpeaker": "Réactiver le son"
+  },
+  "errors": {
+    "loadUsers": "Impossible de charger les utilisateurs.",
+    "sipConnection": "Erreur de connexion SIP.",
+    "callFailed": "Impossible de passer l'appel."
+  }
+}

@@ -1,7 +1,7 @@
 <template>
   <div class="card shadow-sm">
     <div class="card-header">
-      Contacts
+      {{ t('contacts.title') }}
     </div>
 
     <div class="list-group list-group-flush">
@@ -21,6 +21,10 @@
 </template>
 
 <script setup lang="ts">
+import { usePhoneI18n } from './usePhoneI18n'
+
 defineProps<{ contacts: any[] }>()
 defineEmits(['call'])
+
+const { t } = usePhoneI18n()
 </script>

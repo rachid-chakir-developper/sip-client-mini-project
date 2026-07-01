@@ -5,11 +5,11 @@
       <svg class="dialer-search-icon" viewBox="0 0 24 24" fill="currentColor" width="15" height="15">
         <path d="M15.5,14h-0.79l-0.28-0.27C15.41,12.59,16,11.11,16,9.5C16,5.91,13.09,3,9.5,3S3,5.91,3,9.5S5.91,16,9.5,16c1.61,0,3.09-0.59,4.23-1.57l0.27,0.28v0.79l5,4.99L20.49,19L15.5,14z M9.5,14C7.01,14,5,11.99,5,9.5S7.01,5,9.5,5S14,7.01,14,9.5S11.99,14,9.5,14z" />
       </svg>
-      <input v-model="query" type="text" class="dialer-search-input" placeholder="Rechercher un contact…" />
+      <input v-model="query" type="text" class="dialer-search-input" :placeholder="t('contacts.searchPlaceholder')" />
     </div>
 
     <div class="dialer-contacts-list">
-      <p v-if="!filtered.length" class="dialer-contacts-empty">Aucun contact</p>
+      <p v-if="!filtered.length" class="dialer-contacts-empty">{{ t('contacts.empty') }}</p>
 
       <button
         v-for="c in filtered"
@@ -35,6 +35,7 @@
 import { ref, computed } from 'vue'
 import IconPerson from './IconPerson.vue'
 import IconCall    from './IconCall.vue'
+import { usePhoneI18n } from './usePhoneI18n'
 
 interface Contact {
   first_name: string
@@ -44,6 +45,8 @@ interface Contact {
 
 const props = defineProps<{ contacts: Contact[] }>()
 defineEmits(['call'])
+
+const { t } = usePhoneI18n()
 
 const query = ref('')
 

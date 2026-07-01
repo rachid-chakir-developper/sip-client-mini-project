@@ -8,15 +8,15 @@
       </div>
 
       <div class="flex-grow-1 text-truncate">
-        <div class="fw-semibold small text-truncate">{{ caller || 'Numéro inconnu' }}</div>
-        <div class="text-muted call-subtitle">Appel entrant…</div>
+        <div class="fw-semibold small text-truncate">{{ caller || t('call.unknownNumber') }}</div>
+        <div class="text-muted call-subtitle">{{ t('call.incomingEllipsis') }}</div>
       </div>
 
-      <button class="call-btn call-btn-success" title="Décrocher" :disabled="answering" @click="$emit('answer')">
+      <button class="call-btn call-btn-success" :title="t('call.answer')" :disabled="answering" @click="$emit('answer')">
         <span v-if="answering" class="call-btn-spinner" />
         <IconCall v-else />
       </button>
-      <button class="call-btn call-btn-danger" title="Refuser" :disabled="answering" @click="$emit('hangup')">
+      <button class="call-btn call-btn-danger" :title="t('call.decline')" :disabled="answering" @click="$emit('hangup')">
         <IconHangup />
       </button>
     </div>
@@ -26,9 +26,12 @@
 <script setup lang="ts">
 import IconCall   from './IconCall.vue'
 import IconHangup from './IconHangup.vue'
+import { usePhoneI18n } from './usePhoneI18n'
 
 defineProps<{ caller: string; answering: boolean }>()
 defineEmits(['answer', 'hangup'])
+
+const { t } = usePhoneI18n()
 </script>
 
 <style scoped>

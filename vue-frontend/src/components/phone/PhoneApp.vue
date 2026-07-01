@@ -7,10 +7,10 @@
         <div class="col-12 col-sm-8 col-md-5">
           <div class="card shadow-sm">
             <div class="card-header text-center">
-              <h5 class="mb-0">SIP Phone</h5>
+              <h5 class="mb-0">{{ t('title') }}</h5>
             </div>
             <div class="card-body">
-              <p class="text-muted text-center small mb-3">Choisissez votre compte</p>
+              <p class="text-muted text-center small mb-3">{{ t('chooseAccount') }}</p>
               <div class="list-group">
                 <button
                   v-for="u in users"
@@ -24,7 +24,7 @@
                 </button>
               </div>
               <div v-if="loadError" class="alert alert-danger mt-3 mb-0 py-2 small">
-                {{ loadError }}
+                {{ t(loadError) }}
               </div>
             </div>
           </div>
@@ -44,13 +44,13 @@
             <UserHeader :user="selectedUser" @disconnect="switchUser" />
             <div class="card-body">
               <div v-if="status === 'registering'" class="text-muted small text-center py-2">
-                Connexion au serveur SIP…
+                {{ t('connectingServer') }}
               </div>
               <p v-else class="text-muted small text-center mb-0 py-2">
-                Utilisez le bouton d'appel en bas à droite pour composer un numéro.
+                {{ t('hintUseFab') }}
               </p>
               <div v-if="callError" class="alert alert-danger mt-3 mb-0 py-2 small">
-                {{ callError }}
+                {{ t(callError) }}
               </div>
             </div>
           </div>
@@ -68,7 +68,7 @@
     <button
       class="dialer-fab"
       :class="{ 'dialer-fab-active': status === 'calling' || status === 'incall' || status === 'ringing' }"
-      title="Ouvrir le clavier d'appel"
+      :title="t('fabTitle')"
       @click="dialerOpen = !dialerOpen"
     >
       <IconCall />
@@ -79,11 +79,11 @@
       <div v-if="dialerOpen" class="dialer-popup shadow-lg">
         <div class="d-flex justify-content-between align-items-center mb-2">
           <span class="fw-semibold small">{{ dialerTitle }}</span>
-          <button class="btn-close-popup" @click="dialerOpen = false">&times;</button>
+          <button class="btn-close-popup" :aria-label="t('close')" @click="dialerOpen = false">&times;</button>
         </div>
 
         <div v-if="status === 'registering'" class="text-muted small text-center py-3">
-          Connexion au serveur SIP…
+          {{ t('connectingServer') }}
         </div>
 
         <template v-if="status === 'registered'">
@@ -100,7 +100,7 @@
           />
 
           <p v-if="dialerTab === 'recent'" class="text-muted small text-center py-4 mb-0">
-            Aucun appel récent
+            {{ t('recentEmpty') }}
           </p>
 
           <div class="dialer-tabs">
@@ -111,7 +111,7 @@
               @click="dialerTab = 'recent'"
             >
               <IconClock />
-              <span>Récents</span>
+              <span>{{ t('tabs.recent') }}</span>
             </button>
             <button
               type="button"
@@ -120,7 +120,7 @@
               @click="dialerTab = 'keypad'"
             >
               <IconKeypad />
-              <span>Clavier</span>
+              <span>{{ t('tabs.keypad') }}</span>
             </button>
             <button
               type="button"
@@ -129,7 +129,7 @@
               @click="dialerTab = 'contacts'"
             >
               <IconPerson />
-              <span>Contacts</span>
+              <span>{{ t('tabs.contacts') }}</span>
             </button>
           </div>
         </template>
@@ -155,7 +155,7 @@
         />
 
         <div v-if="callError" class="alert alert-danger mt-3 mb-0 py-2 small">
-          {{ callError }}
+          {{ t(callError) }}
         </div>
       </div>
     </transition>
@@ -174,7 +174,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { useSIP } from '@/composables/useSIP'
+import { useSIP } from './useSIP'
+import { usePhoneI18n } from './usePhoneI18n'
 import api from '@/api/index'
 
 import UserHeader          from './UserHeader.vue'
@@ -196,10 +197,18 @@ interface User {
   extension:  string
 }
 
+const props = defineProps<{ locale?: string }>()
+
 const {
   status, caller, muted, speakerMuted, callStartedAt, answering,
   init, call, answer, hangup, stop, toggleMute, toggleSpeaker,
 } = useSIP()
+
+const { t, setLocale } = usePhoneI18n()
+
+watch(() => props.locale, val => {
+  if (val) setLocale(val)
+}, { immediate: true })
 
 const users        = ref<User[]>([])
 const selectedUser = ref<User | null>(null)
@@ -215,14 +224,11 @@ watch(status, val => {
 })
 
 const dialerTitle = computed(() => {
-  if (status.value === 'registered') {
-    return { recent: 'Récents', keypad: 'Clavier', contacts: 'Contacts' }[dialerTab.value]
+  if (status.value === 'registered') return t(`tabs.${dialerTab.value}`)
+  if (status.value === 'ringing' || status.value === 'calling' || status.value === 'incall') {
+    return t(`titles.${status.value}`)
   }
-  return {
-    ringing: 'Appel entrant',
-    calling: 'Appel en cours',
-    incall:  'En communication',
-  }[status.value] ?? 'Appeler'
+  return t('titles.call')
 })
 
 const otherContacts = computed(() =>
@@ -234,7 +240,7 @@ onMounted(async () => {
     const { data } = await api.get('/users/')
     users.value = data
   } catch {
-    loadError.value = 'Impossible de charger les utilisateurs.'
+    loadError.value = 'errors.loadUsers'
   }
 })
 
@@ -248,7 +254,7 @@ async function selectUser(user: User) {
     sipServer.value = data.server
     await init(data)
   } catch (e) {
-    callError.value    = 'Erreur de connexion SIP.'
+    callError.value    = 'errors.sipConnection'
     selectedUser.value = null
     console.error(e)
   }
@@ -260,7 +266,7 @@ async function makeCall(number: string) {
   try {
     await call(number, sipServer.value)
   } catch {
-    callError.value = "Impossible de passer l'appel."
+    callError.value = 'errors.callFailed'
   }
 }
 

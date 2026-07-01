@@ -3,7 +3,7 @@
 
     <div class="call-screen-header">
       <div class="call-screen-identity">
-        <div class="fw-semibold text-truncate">{{ target || 'Numéro inconnu' }}</div>
+        <div class="fw-semibold text-truncate">{{ target || t('call.unknownNumber') }}</div>
         <div class="call-screen-subtitle">{{ subtitle }}</div>
       </div>
       <div class="call-screen-avatar">
@@ -16,7 +16,7 @@
         type="button"
         class="secondary-btn"
         :class="{ 'secondary-btn-active': muted }"
-        :title="muted ? 'Réactiver le micro' : 'Couper le micro'"
+        :title="muted ? t('call.unmuteMic') : t('call.muteMic')"
         @click="$emit('toggle-mute')"
       >
         <IconMicOff v-if="muted" />
@@ -26,7 +26,7 @@
         type="button"
         class="secondary-btn"
         :class="{ 'secondary-btn-active': speakerMuted }"
-        :title="speakerMuted ? 'Réactiver le son' : 'Couper le son'"
+        :title="speakerMuted ? t('call.unmuteSpeaker') : t('call.muteSpeaker')"
         @click="$emit('toggle-speaker')"
       >
         <IconVolumeOff v-if="speakerMuted" />
@@ -35,7 +35,7 @@
     </div>
 
     <div class="call-screen-actions">
-      <button class="call-screen-btn call-screen-btn-hangup" title="Raccrocher" @click="$emit('hangup')">
+      <button class="call-screen-btn call-screen-btn-hangup" :title="t('call.hangup')" @click="$emit('hangup')">
         <IconHangup />
       </button>
     </div>
@@ -51,6 +51,7 @@ import IconMic       from './IconMic.vue'
 import IconMicOff    from './IconMicOff.vue'
 import IconVolume    from './IconVolume.vue'
 import IconVolumeOff from './IconVolumeOff.vue'
+import { usePhoneI18n } from './usePhoneI18n'
 
 const props = defineProps<{
   status:        string
@@ -61,6 +62,8 @@ const props = defineProps<{
 }>()
 
 defineEmits(['hangup', 'toggle-mute', 'toggle-speaker'])
+
+const { t } = usePhoneI18n()
 
 const now = ref(Date.now())
 let timer: ReturnType<typeof setInterval> | null = null
@@ -93,7 +96,7 @@ const elapsed = computed(() => {
 
 const subtitle = computed(() => {
   if (props.status === 'incall') return elapsed.value
-  return 'Appel en cours…'
+  return t('call.inProgress')
 })
 </script>
 

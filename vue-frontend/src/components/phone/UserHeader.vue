@@ -5,12 +5,14 @@
       <span class="badge bg-secondary ms-2">{{ user.extension }}</span>
     </div>
     <button class="btn btn-sm btn-outline-danger" @click="$emit('disconnect')">
-      Déconnecter
+      {{ t('disconnect') }}
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
+import { usePhoneI18n } from './usePhoneI18n'
+
 interface User {
   first_name: string
   last_name:  string
@@ -18,4 +20,6 @@ interface User {
 }
 defineProps<{ user: User }>()
 defineEmits(['disconnect'])
+
+const { t } = usePhoneI18n()
 </script>

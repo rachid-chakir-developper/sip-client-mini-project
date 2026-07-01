@@ -1,0 +1,58 @@
+{
+  "title": "SIP Phone",
+  "chooseAccount": "Konto auswählen",
+  "disconnect": "Trennen",
+  "close": "Schließen",
+  "fabTitle": "Wähltastatur öffnen",
+  "connectingServer": "Verbindung mit dem SIP-Server…",
+  "hintUseFab": "Nutzen Sie die Anruftaste unten rechts, um eine Nummer zu wählen.",
+  "status": {
+    "disconnected": "Getrennt",
+    "registering": "Verbindung wird aufgebaut…",
+    "registered": "Verfügbar",
+    "calling": "Anruf läuft",
+    "ringing": "Eingehender Anruf",
+    "incall": "Im Gespräch"
+  },
+  "titles": {
+    "call": "Anrufen",
+    "ringing": "Eingehender Anruf",
+    "calling": "Anruf läuft",
+    "incall": "Im Gespräch"
+  },
+  "tabs": {
+    "recent": "Letzte",
+    "keypad": "Tastatur",
+    "contacts": "Kontakte"
+  },
+  "recentEmpty": "Keine letzten Anrufe",
+  "dialer": {
+    "placeholder": "Nummer wählen",
+    "backspace": "Löschen"
+  },
+  "contacts": {
+    "title": "Kontakte",
+    "searchPlaceholder": "Kontakt suchen…",
+    "empty": "Keine Kontakte"
+  },
+  "call": {
+    "unknownNumber": "Unbekannte Nummer",
+    "incoming": "Eingehender Anruf",
+    "incomingEllipsis": "Eingehender Anruf…",
+    "inProgress": "Anruf läuft…",
+    "answer": "Annehmen",
+    "decline": "Ablehnen",
+    "hangup": "Auflegen",
+    "muteRingtone": "Klingelton stumm",
+    "replyMessage": "Mit Nachricht antworten",
+    "muteMic": "Mikrofon stummschalten",
+    "unmuteMic": "Mikrofon aktivieren",
+    "muteSpeaker": "Ton stummschalten",
+    "unmuteSpeaker": "Ton aktivieren"
+  },
+  "errors": {
+    "loadUsers": "Benutzer konnten nicht geladen werden.",
+    "sipConnection": "SIP-Verbindung fehlgeschlagen.",
+    "callFailed": "Anruf konnte nicht getätigt werden."
+  }
+}

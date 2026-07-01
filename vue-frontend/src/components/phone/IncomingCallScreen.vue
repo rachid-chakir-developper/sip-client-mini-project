@@ -3,8 +3,8 @@
 
     <div class="incoming-screen-header">
       <div class="incoming-screen-identity">
-        <div class="fw-semibold text-truncate">{{ caller || 'Numéro inconnu' }}</div>
-        <div class="incoming-screen-subtitle">Appel entrant</div>
+        <div class="fw-semibold text-truncate">{{ caller || t('call.unknownNumber') }}</div>
+        <div class="incoming-screen-subtitle">{{ t('call.incoming') }}</div>
       </div>
       <div class="incoming-screen-avatar">
         <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
@@ -14,12 +14,12 @@
     </div>
 
     <div class="incoming-screen-secondary">
-      <span class="secondary-btn" title="Sonnerie silencieuse">
+      <span class="secondary-btn" :title="t('call.muteRingtone')">
         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
           <path d="M12,22c1.1,0,2-0.9,2-2h-4C10,21.1,10.9,22,12,22z M18,16v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-0.83-0.67-1.5-1.5-1.5S10.5,3.17,10.5,4v0.68C7.63,5.36,6,7.92,6,11v5l-2,2v1h16v-1L18,16z" />
         </svg>
       </span>
-      <span class="secondary-btn" title="Répondre par message">
+      <span class="secondary-btn" :title="t('call.replyMessage')">
         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
           <path d="M20,2H4C2.9,2,2,2.9,2,4v18l4-4h14c1.1,0,2-0.9,2-2V4C22,2.9,21.1,2,20,2z" />
         </svg>
@@ -29,14 +29,14 @@
     <div class="incoming-screen-actions">
       <button
         class="incoming-btn incoming-btn-answer"
-        title="Décrocher"
+        :title="t('call.answer')"
         :disabled="answering"
         @click="$emit('answer')"
       >
         <span v-if="answering" class="incoming-btn-spinner" />
         <IconCall v-else />
       </button>
-      <button class="incoming-btn incoming-btn-decline" title="Refuser" :disabled="answering" @click="$emit('hangup')">
+      <button class="incoming-btn incoming-btn-decline" :title="t('call.decline')" :disabled="answering" @click="$emit('hangup')">
         <IconHangup />
       </button>
     </div>
@@ -47,9 +47,12 @@
 <script setup lang="ts">
 import IconCall   from './IconCall.vue'
 import IconHangup from './IconHangup.vue'
+import { usePhoneI18n } from './usePhoneI18n'
 
 defineProps<{ caller: string; answering: boolean }>()
 defineEmits(['answer', 'hangup'])
+
+const { t } = usePhoneI18n()
 </script>
 
 <style scoped>

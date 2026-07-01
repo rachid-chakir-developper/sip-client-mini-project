@@ -6,10 +6,10 @@
         v-model="model"
         type="text"
         class="dialer-input"
-        placeholder="Composer un numéro"
+        :placeholder="t('dialer.placeholder')"
         @keyup.enter="emitCall"
       />
-      <button v-if="model" class="dialer-backspace" title="Effacer" @click="backspace">
+      <button v-if="model" class="dialer-backspace" :title="t('dialer.backspace')" @click="backspace">
         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
           <path d="M22,3H7C6.31,3,5.77,3.35,5.41,3.88L0,12l5.41,8.12C5.77,20.64,6.31,21,7,21h15c1.1,0,2-0.9,2-2V5C24,3.9,23.1,3,22,3z M19,15.59L17.59,17L14,13.41L10.41,17L9,15.59L12.59,12L9,8.41L10.41,7L14,10.59L17.59,7L19,8.41L15.41,12L19,15.59z" />
         </svg>
@@ -39,9 +39,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import IconCall from './IconCall.vue'
+import { usePhoneI18n } from './usePhoneI18n'
 
 const props = defineProps<{ modelValue: string }>()
 const emit  = defineEmits(['update:modelValue', 'call'])
+
+const { t } = usePhoneI18n()
 
 const model = computed({
   get: () => props.modelValue,
