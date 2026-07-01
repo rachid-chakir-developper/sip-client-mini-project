@@ -1,0 +1,152 @@
+import { ref, onUnmounted } from 'vue'
+import {
+  UserAgent,
+  Registerer,
+  Inviter,
+  Invitation,
+  SessionState,
+  RegistererState,
+} from 'sip.js'
+import type { Session } from 'sip.js'
+
+interface SIPCredentials {
+  extension:    string
+  password:     string
+  server:       string
+  ws_url:       string
+  display_name?: string
+}
+
+export function useSIP() {
+  const ua      = ref<UserAgent | null>(null)
+  const session = ref<Session | null>(null)
+  const status  = ref('disconnected')
+
+  const remoteAudio = document.createElement('audio')
+  remoteAudio.autoplay = true
+  document.body.appendChild(remoteAudio)
+
+  function _attachAudio(s: Session): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pc = (s.sessionDescriptionHandler as any)?.peerConnection as RTCPeerConnection | undefined
+    if (!pc) return
+
+    pc.ontrack = (event: RTCTrackEvent) => {
+      if (event.streams[0]) {
+        remoteAudio.srcObject = event.streams[0]
+        remoteAudio.play().catch((e: unknown) => console.warn('[SIP] Audio bloqué:', e))
+      }
+    }
+
+    const existing = pc.getReceivers().filter(r => r.track).map(r => r.track)
+    if (existing.length) {
+      remoteAudio.srcObject = new MediaStream(existing)
+      remoteAudio.play().catch((e: unknown) => console.warn('[SIP] Audio bloqué:', e))
+    }
+  }
+
+  async function init(credentials: SIPCredentials): Promise<void> {
+    const { extension, password, server, ws_url, display_name } = credentials
+
+    ua.value = new UserAgent({
+      uri:              UserAgent.makeURI(`sip:${extension}@${server}`)!,
+      displayName:      display_name ?? extension,
+      transportOptions: { server: ws_url },
+      authorizationUsername: extension,
+      authorizationPassword: password,
+      sessionDescriptionHandlerFactoryOptions: {
+        constraints: { audio: true, video: false },
+        peerConnectionConfiguration: {
+          iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+        },
+      },
+    })
+
+    ua.value.delegate = {
+      onInvite(invitation: Invitation) {
+        session.value = invitation
+        status.value  = 'ringing'
+
+        invitation.stateChange.addListener((state: SessionState) => {
+          if (state === SessionState.Established) {
+            _attachAudio(invitation)
+            status.value = 'incall'
+          }
+          if (state === SessionState.Terminated) {
+            status.value  = 'registered'
+            session.value = null
+          }
+        })
+      },
+    }
+
+    await ua.value.start()
+
+    const registerer = new Registerer(ua.value)
+    registerer.stateChange.addListener((s: RegistererState) => {
+      if (s === RegistererState.Registered)   status.value = 'registered'
+      if (s === RegistererState.Unregistered) status.value = 'disconnected'
+    })
+
+    status.value = 'registering'
+    await registerer.register()
+  }
+
+  async function call(target: string, server: string): Promise<void> {
+    if (!ua.value) return
+
+    const inviter = new Inviter(
+      ua.value,
+      UserAgent.makeURI(`sip:${target}@${server}`)!,
+    )
+
+    inviter.stateChange.addListener((state: SessionState) => {
+      if (state === SessionState.Established) {
+        _attachAudio(inviter)
+        status.value = 'incall'
+      }
+      if (state === SessionState.Terminated) {
+        status.value  = 'registered'
+        session.value = null
+      }
+    })
+
+    session.value = inviter
+    status.value  = 'calling'
+    await inviter.invite()
+  }
+
+  async function answer(): Promise<void> {
+    if (session.value?.state === SessionState.Initial) {
+      await (session.value as Invitation).accept()
+    }
+  }
+
+  async function hangup(): Promise<void> {
+    if (!session.value) return
+    const s = session.value.state
+    if (s === SessionState.Initial || s === SessionState.Establishing) {
+      if (session.value instanceof Invitation) {
+        await session.value.reject()
+      } else {
+        await (session.value as Inviter).cancel()
+      }
+    } else {
+      await session.value.bye()
+    }
+  }
+
+  function stop(): void {
+    ua.value?.stop()
+    ua.value      = null
+    session.value = null
+    status.value  = 'disconnected'
+  }
+
+  onUnmounted(() => {
+    ua.value?.stop()
+    if (remoteAudio.parentNode) document.body.removeChild(remoteAudio)
+  })
+
+  return { status, init, call, answer, hangup, stop }
+}

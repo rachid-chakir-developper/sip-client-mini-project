@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  django:
+    build: ./django
+    container_name: django_dev
+    volumes:
+      - ./django:/app
+    ports:
+      - "9090:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python manage.py runserver 0.0.0.0:8000
+    depends_on:
+      - asterisk
+
+  asterisk:
+    image: andrius/asterisk:20
+    container_name: asterisk
+    restart: unless-stopped
+    ports:
+      # SIP UDP
+      - "5060:5060/udp"
+
+      # SIP TCP
+      - "5060:5060/tcp"
+
+      # WebSocket HTTP
+      - "8088:8088"
+
+      # WebSocket HTTPS (WSS)
+      - "8089:8089"
+
+      # RTP
+      - "10000-10100:10000-10100/udp"
+
+    volumes:
+      - ./asterisk/pjsip.conf:/etc/asterisk/pjsip.conf
+      - ./asterisk/extensions.conf:/etc/asterisk/extensions.conf
+      - ./asterisk/http.conf:/etc/asterisk/http.conf
+      - ./asterisk/rtp.conf:/etc/asterisk/rtp.conf
+      - ./asterisk/logger.conf:/etc/asterisk/logger.conf
+      - ./asterisk/keys:/etc/asterisk/keys
+
+    networks:
+      - voip
+
+networks:
+  voip:
+    driver: bridge
