@@ -1,6 +1,6 @@
 <template>
 
-  <!-- ── Sélection du compte ── -->
+  <!-- ── Account selection ── -->
   <div v-if="!selectedUser" class="min-vh-100 d-flex align-items-center justify-content-center bg-light">
     <div class="container">
       <div class="row justify-content-center">
@@ -33,13 +33,13 @@
     </div>
   </div>
 
-  <!-- ── Interface téléphone + contacts ── -->
+  <!-- ── Phone interface + contacts ── -->
   <div v-else class="min-vh-100 bg-light py-4">
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-12 col-md-8 col-lg-6">
 
-          <!-- Compte connecté -->
+          <!-- Connected account -->
           <div class="card shadow-sm">
             <UserHeader :user="selectedUser" @disconnect="switchUser" />
             <div class="card-body">
@@ -55,7 +55,7 @@
             </div>
           </div>
 
-          <!-- Contacts -->
+          <!-- Contact list -->
           <div class="mt-3">
             <Contacts :contacts="otherContacts" @call="handleContactCall" />
           </div>
@@ -64,7 +64,7 @@
       </div>
     </div>
 
-    <!-- FAB : ouvre le composeur d'appel -->
+    <!-- FAB: opens the call composer -->
     <button
       class="dialer-fab"
       :class="{ 'dialer-fab-active': status === 'calling' || status === 'incall' || status === 'ringing' }"
@@ -74,7 +74,7 @@
       <IconCall />
     </button>
 
-    <!-- Popup : clavier / appel entrant / appel en cours -->
+    <!-- Popup: keypad / incoming call / ongoing call -->
     <transition name="pop-fade">
       <div v-if="dialerOpen" class="dialer-popup shadow-lg">
         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -160,7 +160,7 @@
       </div>
     </transition>
 
-    <!-- Popup : appel entrant -->
+    <!-- Popup: incoming call -->
     <IncomingCallPopup
       v-if="status === 'ringing'"
       :caller="caller"

@@ -1,9 +1,9 @@
 import { ref } from 'vue'
 
-// Tonalité de retour d'appel générée localement (norme CEPT/Europe : 425 Hz,
-// cadence 1 s ON / 4 s OFF). Indépendante d'Asterisk : contourne la limitation
-// du codec Opus (transcodage PCM → Opus non disponible sans module payant),
-// qui empêche Asterisk de synthétiser une tonalité côté serveur pour un canal WebRTC.
+// Ringback tone generated locally (CEPT/Europe standard: 425 Hz,
+// 1s ON / 4s OFF cadence). Independent of Asterisk: works around the Opus
+// codec limitation (PCM → Opus transcoding unavailable without a paid module),
+// which prevents Asterisk from synthesizing a tone server-side for a WebRTC channel.
 const FREQUENCY_HZ = 425
 const ON_MS        = 1000
 const OFF_MS       = 2000

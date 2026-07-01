@@ -62,7 +62,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES':     [],
 }
 
-# Paramètres Asterisk
+# Asterisk settings
 ASTERISK_HOST   = 'localhost'
 ASTERISK_WS_URL = 'ws://localhost:8088/ws'
 

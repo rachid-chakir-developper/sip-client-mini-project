@@ -16,8 +16,8 @@ function detectLocale(): PhoneLocale {
   return lang in dictionaries ? (lang as PhoneLocale) : FALLBACK_LOCALE
 }
 
-// Un seul état de langue partagé par tout le module "phone", pour que tous
-// les composants restent synchronisés sans dépendre d'un plugin global (i18n, store…).
+// A single locale state shared across the whole "phone" module, so that all
+// components stay in sync without depending on a global plugin (i18n, store…).
 const locale = ref<PhoneLocale>(detectLocale())
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -22,8 +22,8 @@ def list_users(request):
 @api_view(['GET'])
 def sip_credentials(request):
     """
-    Retourne les credentials SIP de l'utilisateur.
-    Sécurité : toujours appeler via HTTPS — les credentials sont chiffrés en transit (TLS).
+    Returns the user's SIP credentials.
+    Security: always call over HTTPS — credentials are encrypted in transit (TLS).
     """
     extension = request.query_params.get('extension')
     if not extension:

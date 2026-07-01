@@ -137,9 +137,9 @@ export function useSIP() {
 
     session.value = inviter
     status.value  = 'calling'
-    // Asterisk ne peut pas synthétiser la tonalité côté serveur pour un canal
-    // WebRTC (transcodage PCM → Opus indisponible sans codec payant) : la
-    // tonalité est donc générée localement pendant que l'appel sonne.
+    // Asterisk can't synthesize the tone server-side for a WebRTC channel
+    // (PCM → Opus transcoding unavailable without a paid codec), so the
+    // tone is generated locally while the call is ringing.
     ringbackTone.start()
     await inviter.invite()
   }
