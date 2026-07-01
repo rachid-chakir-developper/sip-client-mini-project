@@ -36,54 +36,151 @@
   <!-- ── Interface téléphone + contacts ── -->
   <div v-else class="min-vh-100 bg-light py-4">
     <div class="container">
-      <div class="row g-3 align-items-start">
+      <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
 
-        <!-- Téléphone -->
-        <div class="col-12 col-md-7">
+          <!-- Compte connecté -->
           <div class="card shadow-sm">
             <UserHeader :user="selectedUser" @disconnect="switchUser" />
             <div class="card-body">
-              <div v-if="status === 'registering'" class="text-muted small mb-3">
+              <div v-if="status === 'registering'" class="text-muted small text-center py-2">
                 Connexion au serveur SIP…
               </div>
-              <Dialer
-                v-if="status === 'registered'"
-                v-model="target"
-                @call="makeCall"
-              />
-              <CallStatus
-                :status="status"
-                :target="target"
-                @answer="answer"
-                @hangup="hangup"
-              />
+              <p v-else class="text-muted small text-center mb-0 py-2">
+                Utilisez le bouton d'appel en bas à droite pour composer un numéro.
+              </p>
               <div v-if="callError" class="alert alert-danger mt-3 mb-0 py-2 small">
                 {{ callError }}
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Contacts -->
-        <div class="col-12 col-md-5">
-          <Contacts :contacts="otherContacts" @call="handleContactCall" />
-        </div>
+          <!-- Contacts -->
+          <div class="mt-3">
+            <Contacts :contacts="otherContacts" @call="handleContactCall" />
+          </div>
 
+        </div>
       </div>
     </div>
+
+    <!-- FAB : ouvre le composeur d'appel -->
+    <button
+      class="dialer-fab"
+      :class="{ 'dialer-fab-active': status === 'calling' || status === 'incall' || status === 'ringing' }"
+      title="Ouvrir le clavier d'appel"
+      @click="dialerOpen = !dialerOpen"
+    >
+      <IconCall />
+    </button>
+
+    <!-- Popup : clavier / appel entrant / appel en cours -->
+    <transition name="pop-fade">
+      <div v-if="dialerOpen" class="dialer-popup shadow-lg">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="fw-semibold small">{{ dialerTitle }}</span>
+          <button class="btn-close-popup" @click="dialerOpen = false">&times;</button>
+        </div>
+
+        <div v-if="status === 'registering'" class="text-muted small text-center py-3">
+          Connexion au serveur SIP…
+        </div>
+
+        <template v-if="status === 'registered'">
+          <DialerContacts
+            v-if="dialerTab === 'contacts'"
+            :contacts="otherContacts"
+            @call="handleContactCall"
+          />
+
+          <Dialer
+            v-if="dialerTab === 'keypad'"
+            v-model="target"
+            @call="makeCall"
+          />
+
+          <p v-if="dialerTab === 'recent'" class="text-muted small text-center py-4 mb-0">
+            Aucun appel récent
+          </p>
+
+          <div class="dialer-tabs">
+            <button
+              type="button"
+              class="dialer-tab"
+              :class="{ 'dialer-tab-active': dialerTab === 'recent' }"
+              @click="dialerTab = 'recent'"
+            >
+              <IconClock />
+              <span>Récents</span>
+            </button>
+            <button
+              type="button"
+              class="dialer-tab"
+              :class="{ 'dialer-tab-active': dialerTab === 'keypad' }"
+              @click="dialerTab = 'keypad'"
+            >
+              <IconKeypad />
+              <span>Clavier</span>
+            </button>
+            <button
+              type="button"
+              class="dialer-tab"
+              :class="{ 'dialer-tab-active': dialerTab === 'contacts' }"
+              @click="dialerTab = 'contacts'"
+            >
+              <IconPerson />
+              <span>Contacts</span>
+            </button>
+          </div>
+        </template>
+
+        <IncomingCallScreen
+          v-if="status === 'ringing'"
+          :caller="caller"
+          @answer="answer"
+          @hangup="hangup"
+        />
+
+        <CallStatus
+          v-if="status === 'calling' || status === 'incall'"
+          :status="status"
+          :target="target"
+          @hangup="hangup"
+        />
+
+        <div v-if="callError" class="alert alert-danger mt-3 mb-0 py-2 small">
+          {{ callError }}
+        </div>
+      </div>
+    </transition>
+
+    <!-- Popup : appel entrant -->
+    <IncomingCallPopup
+      v-if="status === 'ringing'"
+      :caller="caller"
+      @answer="answer"
+      @hangup="hangup"
+    />
   </div>
 
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useSIP } from '@/composables/useSIP'
 import api from '@/api/index'
 
-import UserHeader from './UserHeader.vue'
-import Dialer     from './Dialer.vue'
-import CallStatus from './CallStatus.vue'
-import Contacts   from './Contacts.vue'
+import UserHeader          from './UserHeader.vue'
+import Dialer              from './Dialer.vue'
+import CallStatus          from './CallStatus.vue'
+import Contacts            from './Contacts.vue'
+import DialerContacts      from './DialerContacts.vue'
+import IconCall            from './IconCall.vue'
+import IconClock           from './IconClock.vue'
+import IconKeypad          from './IconKeypad.vue'
+import IconPerson          from './IconPerson.vue'
+import IncomingCallPopup   from './IncomingCallPopup.vue'
+import IncomingCallScreen  from './IncomingCallScreen.vue'
 
 interface User {
   username:   string
@@ -92,7 +189,7 @@ interface User {
   extension:  string
 }
 
-const { status, init, call, answer, hangup, stop } = useSIP()
+const { status, caller, init, call, answer, hangup, stop } = useSIP()
 
 const users        = ref<User[]>([])
 const selectedUser = ref<User | null>(null)
@@ -100,6 +197,23 @@ const sipServer    = ref('')
 const target       = ref('')
 const loadError    = ref('')
 const callError    = ref('')
+const dialerOpen   = ref(false)
+const dialerTab    = ref<'recent' | 'keypad' | 'contacts'>('contacts')
+
+watch(status, val => {
+  if (val === 'calling' || val === 'incall' || val === 'ringing') dialerOpen.value = true
+})
+
+const dialerTitle = computed(() => {
+  if (status.value === 'registered') {
+    return { recent: 'Récents', keypad: 'Clavier', contacts: 'Contacts' }[dialerTab.value]
+  }
+  return {
+    ringing: 'Appel entrant',
+    calling: 'Appel en cours',
+    incall:  'En communication',
+  }[status.value] ?? 'Appeler'
+})
 
 const otherContacts = computed(() =>
   users.value.filter(u => u.extension !== selectedUser.value?.extension)
@@ -152,3 +266,95 @@ function switchUser() {
   callError.value    = ''
 }
 </script>
+
+<style scoped>
+.dialer-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: #28a745;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 1090;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+.dialer-fab:hover {
+  transform: scale(1.06);
+}
+.dialer-fab-active {
+  background: #0d6efd;
+  animation: pulse-ring 1.4s ease-out infinite;
+}
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.45), 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+  100% {
+    box-shadow: 0 0 0 12px rgba(13, 110, 253, 0), 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.dialer-popup {
+  position: fixed;
+  right: 24px;
+  bottom: 92px;
+  width: 300px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 16px;
+  z-index: 1085;
+}
+
+.btn-close-popup {
+  border: none;
+  background: transparent;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: #6c757d;
+  cursor: pointer;
+}
+
+.dialer-tabs {
+  display: flex;
+  justify-content: space-around;
+  border-top: 1px solid #f1f3f5;
+  margin-top: 10px;
+  padding-top: 8px;
+}
+
+.dialer-tab {
+  flex: 1 1 0;
+  border: none;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: #adb5bd;
+  font-size: 0.65rem;
+  padding: 2px 0;
+  cursor: pointer;
+}
+
+.dialer-tab-active {
+  color: #28a745;
+}
+
+.pop-fade-enter-active,
+.pop-fade-leave-active {
+  transition: all 0.18s ease;
+}
+.pop-fade-enter-from,
+.pop-fade-leave-to {
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+}
+</style>

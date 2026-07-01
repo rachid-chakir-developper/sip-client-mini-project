@@ -1,33 +1,19 @@
 <template>
-  <div class="mt-3 text-center">
+  <div class="call-screen">
 
-    <span class="badge mb-2" :class="badgeClass">
-      {{ label }}
-    </span>
-
-    <div v-if="status === 'calling'" class="p-3 border rounded">
-      <p>Appel vers <strong>{{ target }}</strong></p>
-      <button class="btn btn-danger" @click="$emit('hangup')">
-        Annuler
-      </button>
-    </div>
-
-    <div v-if="status === 'ringing'" class="p-3 border border-warning rounded">
-      <p>Appel entrant</p>
-      <div class="d-flex gap-2 justify-content-center">
-        <button class="btn btn-success" @click="$emit('answer')">
-          Décrocher
-        </button>
-        <button class="btn btn-danger" @click="$emit('hangup')">
-          Refuser
-        </button>
+    <div class="call-screen-header">
+      <div class="call-screen-identity">
+        <div class="fw-semibold text-truncate">{{ target || 'Numéro inconnu' }}</div>
+        <div class="call-screen-subtitle">{{ subtitle }}</div>
+      </div>
+      <div class="call-screen-avatar">
+        <IconPerson />
       </div>
     </div>
 
-    <div v-if="status === 'incall'" class="p-3 border border-success rounded">
-      <p>En communication</p>
-      <button class="btn btn-danger" @click="$emit('hangup')">
-        Raccrocher
+    <div class="call-screen-actions">
+      <button class="call-screen-btn call-screen-btn-hangup" title="Raccrocher" @click="$emit('hangup')">
+        <IconHangup />
       </button>
     </div>
 
@@ -36,29 +22,78 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import IconPerson  from './IconPerson.vue'
+import IconHangup  from './IconHangup.vue'
 
 const props = defineProps<{
   status: string
   target: string
 }>()
 
-defineEmits(['answer', 'hangup'])
+defineEmits(['hangup'])
 
-const label = computed(() => ({
-  disconnected: 'Déconnecté',
-  registering: 'Connexion...',
-  registered: 'Disponible',
-  calling: 'Appel',
-  ringing: 'Entrant',
-  incall: 'En appel'
-}[props.status] || props.status))
-
-const badgeClass = computed(() => ({
-  disconnected: 'bg-secondary',
-  registering: 'bg-warning text-dark',
-  registered: 'bg-success',
-  calling: 'bg-primary',
-  ringing: 'bg-warning text-dark',
-  incall: 'bg-success'
-}[props.status] || 'bg-secondary'))
+const subtitle = computed(() => ({
+  calling: 'Appel en cours…',
+  incall:  'En communication',
+}[props.status] ?? props.status))
 </script>
+
+<style scoped>
+.call-screen {
+  padding: 4px 4px 8px;
+}
+
+.call-screen-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.call-screen-identity {
+  min-width: 0;
+}
+
+.call-screen-subtitle {
+  font-size: 0.75rem;
+  color: #adb5bd;
+}
+
+.call-screen-avatar {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #e9eff3;
+  color: #adb5bd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.call-screen-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.call-screen-btn {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+.call-screen-btn:hover {
+  transform: scale(1.06);
+}
+
+.call-screen-btn-hangup {
+  background: #dc3545;
+}
+</style>

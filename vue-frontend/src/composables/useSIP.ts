@@ -21,6 +21,7 @@ export function useSIP() {
   const ua      = ref<UserAgent | null>(null)
   const session = ref<Session | null>(null)
   const status  = ref('disconnected')
+  const caller  = ref('')
 
   const remoteAudio = document.createElement('audio')
   remoteAudio.autoplay = true
@@ -66,6 +67,9 @@ export function useSIP() {
       onInvite(invitation: Invitation) {
         session.value = invitation
         status.value  = 'ringing'
+        caller.value  = invitation.remoteIdentity?.displayName
+          || invitation.remoteIdentity?.uri?.user
+          || ''
 
         invitation.stateChange.addListener((state: SessionState) => {
           if (state === SessionState.Established) {
@@ -75,6 +79,7 @@ export function useSIP() {
           if (state === SessionState.Terminated) {
             status.value  = 'registered'
             session.value = null
+            caller.value  = ''
           }
         })
       },
@@ -148,5 +153,5 @@ export function useSIP() {
     if (remoteAudio.parentNode) document.body.removeChild(remoteAudio)
   })
 
-  return { status, init, call, answer, hangup, stop }
+  return { status, caller, init, call, answer, hangup, stop }
 }
