@@ -12,10 +12,11 @@
         <div class="text-muted call-subtitle">Appel entrant…</div>
       </div>
 
-      <button class="call-btn call-btn-success" title="Décrocher" @click="$emit('answer')">
-        <IconCall />
+      <button class="call-btn call-btn-success" title="Décrocher" :disabled="answering" @click="$emit('answer')">
+        <span v-if="answering" class="call-btn-spinner" />
+        <IconCall v-else />
       </button>
-      <button class="call-btn call-btn-danger" title="Refuser" @click="$emit('hangup')">
+      <button class="call-btn call-btn-danger" title="Refuser" :disabled="answering" @click="$emit('hangup')">
         <IconHangup />
       </button>
     </div>
@@ -26,7 +27,7 @@
 import IconCall   from './IconCall.vue'
 import IconHangup from './IconHangup.vue'
 
-defineProps<{ caller: string }>()
+defineProps<{ caller: string; answering: boolean }>()
 defineEmits(['answer', 'hangup'])
 </script>
 
@@ -74,6 +75,10 @@ defineEmits(['answer', 'hangup'])
   justify-content: center;
   cursor: pointer;
 }
+.call-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
 
 .call-btn-success {
   background: #28a745;
@@ -81,6 +86,21 @@ defineEmits(['answer', 'hangup'])
 
 .call-btn-danger {
   background: #dc3545;
+}
+
+.call-btn-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  animation: call-btn-spin 0.6s linear infinite;
+}
+
+@keyframes call-btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .pop-fade-enter-active,

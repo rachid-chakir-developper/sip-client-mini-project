@@ -18,10 +18,14 @@ interface SIPCredentials {
 }
 
 export function useSIP() {
-  const ua      = ref<UserAgent | null>(null)
-  const session = ref<Session | null>(null)
-  const status  = ref('disconnected')
-  const caller  = ref('')
+  const ua            = ref<UserAgent | null>(null)
+  const session       = ref<Session | null>(null)
+  const status        = ref('disconnected')
+  const caller        = ref('')
+  const muted         = ref(false)
+  const speakerMuted  = ref(false)
+  const callStartedAt = ref<number | null>(null)
+  const answering     = ref(false)
 
   const remoteAudio = document.createElement('audio')
   remoteAudio.autoplay = true
@@ -74,12 +78,17 @@ export function useSIP() {
         invitation.stateChange.addListener((state: SessionState) => {
           if (state === SessionState.Established) {
             _attachAudio(invitation)
-            status.value = 'incall'
+            status.value        = 'incall'
+            callStartedAt.value = Date.now()
           }
           if (state === SessionState.Terminated) {
-            status.value  = 'registered'
-            session.value = null
-            caller.value  = ''
+            status.value        = 'registered'
+            session.value       = null
+            caller.value        = ''
+            callStartedAt.value = null
+            muted.value         = false
+            speakerMuted.value  = false
+            remoteAudio.muted   = false
           }
         })
       },
@@ -108,11 +117,16 @@ export function useSIP() {
     inviter.stateChange.addListener((state: SessionState) => {
       if (state === SessionState.Established) {
         _attachAudio(inviter)
-        status.value = 'incall'
+        status.value        = 'incall'
+        callStartedAt.value = Date.now()
       }
       if (state === SessionState.Terminated) {
-        status.value  = 'registered'
-        session.value = null
+        status.value         = 'registered'
+        session.value        = null
+        callStartedAt.value  = null
+        muted.value          = false
+        speakerMuted.value   = false
+        remoteAudio.muted    = false
       }
     })
 
@@ -122,8 +136,12 @@ export function useSIP() {
   }
 
   async function answer(): Promise<void> {
-    if (session.value?.state === SessionState.Initial) {
+    if (session.value?.state !== SessionState.Initial) return
+    answering.value = true
+    try {
       await (session.value as Invitation).accept()
+    } finally {
+      answering.value = false
     }
   }
 
@@ -148,10 +166,29 @@ export function useSIP() {
     status.value  = 'disconnected'
   }
 
+  function toggleMute(): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pc = (session.value?.sessionDescriptionHandler as any)?.peerConnection as RTCPeerConnection | undefined
+    if (!pc) return
+
+    muted.value = !muted.value
+    pc.getSenders().forEach(sender => {
+      if (sender.track?.kind === 'audio') sender.track.enabled = !muted.value
+    })
+  }
+
+  function toggleSpeaker(): void {
+    speakerMuted.value = !speakerMuted.value
+    remoteAudio.muted  = speakerMuted.value
+  }
+
   onUnmounted(() => {
     ua.value?.stop()
     if (remoteAudio.parentNode) document.body.removeChild(remoteAudio)
   })
 
-  return { status, caller, init, call, answer, hangup, stop }
+  return {
+    status, caller, muted, speakerMuted, callStartedAt, answering,
+    init, call, answer, hangup, stop, toggleMute, toggleSpeaker,
+  }
 }

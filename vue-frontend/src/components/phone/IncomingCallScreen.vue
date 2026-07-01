@@ -27,10 +27,16 @@
     </div>
 
     <div class="incoming-screen-actions">
-      <button class="incoming-btn incoming-btn-answer" title="Décrocher" @click="$emit('answer')">
-        <IconCall />
+      <button
+        class="incoming-btn incoming-btn-answer"
+        title="Décrocher"
+        :disabled="answering"
+        @click="$emit('answer')"
+      >
+        <span v-if="answering" class="incoming-btn-spinner" />
+        <IconCall v-else />
       </button>
-      <button class="incoming-btn incoming-btn-decline" title="Refuser" @click="$emit('hangup')">
+      <button class="incoming-btn incoming-btn-decline" title="Refuser" :disabled="answering" @click="$emit('hangup')">
         <IconHangup />
       </button>
     </div>
@@ -42,7 +48,7 @@
 import IconCall   from './IconCall.vue'
 import IconHangup from './IconHangup.vue'
 
-defineProps<{ caller: string }>()
+defineProps<{ caller: string; answering: boolean }>()
 defineEmits(['answer', 'hangup'])
 </script>
 
@@ -119,6 +125,11 @@ defineEmits(['answer', 'hangup'])
 .incoming-btn:hover {
   transform: scale(1.06);
 }
+.incoming-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
 
 .incoming-btn-answer {
   background: #28a745;
@@ -126,5 +137,20 @@ defineEmits(['answer', 'hangup'])
 
 .incoming-btn-decline {
   background: #dc3545;
+}
+
+.incoming-btn-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  animation: incoming-btn-spin 0.6s linear infinite;
+}
+
+@keyframes incoming-btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

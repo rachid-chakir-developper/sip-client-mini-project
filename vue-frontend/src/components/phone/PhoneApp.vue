@@ -137,6 +137,7 @@
         <IncomingCallScreen
           v-if="status === 'ringing'"
           :caller="caller"
+          :answering="answering"
           @answer="answer"
           @hangup="hangup"
         />
@@ -145,7 +146,12 @@
           v-if="status === 'calling' || status === 'incall'"
           :status="status"
           :target="target"
+          :muted="muted"
+          :speaker-muted="speakerMuted"
+          :call-started-at="callStartedAt"
           @hangup="hangup"
+          @toggle-mute="toggleMute"
+          @toggle-speaker="toggleSpeaker"
         />
 
         <div v-if="callError" class="alert alert-danger mt-3 mb-0 py-2 small">
@@ -158,6 +164,7 @@
     <IncomingCallPopup
       v-if="status === 'ringing'"
       :caller="caller"
+      :answering="answering"
       @answer="answer"
       @hangup="hangup"
     />
@@ -189,7 +196,10 @@ interface User {
   extension:  string
 }
 
-const { status, caller, init, call, answer, hangup, stop } = useSIP()
+const {
+  status, caller, muted, speakerMuted, callStartedAt, answering,
+  init, call, answer, hangup, stop, toggleMute, toggleSpeaker,
+} = useSIP()
 
 const users        = ref<User[]>([])
 const selectedUser = ref<User | null>(null)
