@@ -21,7 +21,7 @@
         <span class="dialer-contact-avatar">
           <IconPerson />
         </span>
-        <span class="dialer-contact-name text-truncate">{{ c.first_name }} {{ c.last_name }}</span>
+        <span class="dialer-contact-name">{{ c.first_name }} {{ c.last_name }}</span>
         <span class="dialer-contact-call">
           <IconCall />
         </span>
@@ -131,6 +131,9 @@ const filtered = computed(() => {
 .dialer-contact-name {
   flex-grow: 1;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.85rem;
 }
 

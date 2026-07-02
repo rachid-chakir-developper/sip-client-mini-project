@@ -3,7 +3,7 @@
 
     <div class="incoming-screen-header">
       <div class="incoming-screen-identity">
-        <div class="fw-semibold text-truncate">{{ caller || t('call.unknownNumber') }}</div>
+        <div class="incoming-screen-name">{{ caller || t('call.unknownNumber') }}</div>
         <div class="incoming-screen-subtitle">{{ t('call.incoming') }}</div>
       </div>
       <div class="incoming-screen-avatar">
@@ -70,6 +70,13 @@ const { t } = usePhoneI18n()
 
 .incoming-screen-identity {
   min-width: 0;
+}
+
+.incoming-screen-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .incoming-screen-subtitle {

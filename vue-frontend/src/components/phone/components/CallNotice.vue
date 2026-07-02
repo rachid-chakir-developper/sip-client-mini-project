@@ -1,6 +1,6 @@
 <template>
   <transition name="call-notice-fade">
-    <div v-if="message" class="call-notice shadow-lg">
+    <div v-if="message" class="call-notice">
       {{ message }}
     </div>
   </transition>
@@ -27,6 +27,7 @@ defineProps<{ message: string | null }>()
   font-size: 0.85rem;
   font-weight: 500;
   white-space: nowrap;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
 }
 
 .call-notice-fade-enter-active,

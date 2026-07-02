@@ -1,67 +1,57 @@
 <template>
 
   <!-- ── Account selection ── -->
-  <div v-if="!selectedUser" class="min-vh-100 d-flex align-items-center justify-content-center bg-light">
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-12 col-sm-8 col-md-5">
-          <div class="card shadow-sm">
-            <div class="card-header text-center">
-              <h5 class="mb-0">{{ t('title') }}</h5>
-            </div>
-            <div class="card-body">
-              <p class="text-muted text-center small mb-3">{{ t('chooseAccount') }}</p>
-              <div class="list-group">
-                <button
-                  v-for="u in users"
-                  :key="u.extension"
-                  type="button"
-                  class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                  @click="selectUser(u)"
-                >
-                  <span class="fw-semibold">{{ u.first_name }} {{ u.last_name }}</span>
-                  <span class="badge bg-primary rounded-pill">{{ u.extension }}</span>
-                </button>
-              </div>
-              <div v-if="loadError" class="alert alert-danger mt-3 mb-0 py-2 small">
-                {{ t(loadError) }}
-              </div>
-            </div>
-          </div>
+  <div v-if="!selectedUser" class="account-screen">
+    <div class="account-card">
+      <div class="account-card-header">
+        <h1 class="account-title">{{ t('title') }}</h1>
+      </div>
+      <div class="account-card-body">
+        <p class="account-subtitle">{{ t('chooseAccount') }}</p>
+        <div class="account-list">
+          <button
+            v-for="u in users"
+            :key="u.extension"
+            type="button"
+            class="account-row"
+            @click="selectUser(u)"
+          >
+            <span class="account-row-name">{{ u.first_name }} {{ u.last_name }}</span>
+            <span class="account-row-badge">{{ u.extension }}</span>
+          </button>
+        </div>
+        <div v-if="loadError" class="error-banner">
+          {{ t(loadError) }}
         </div>
       </div>
     </div>
   </div>
 
   <!-- ── Phone interface + contacts ── -->
-  <div v-else class="min-vh-100 bg-light py-4">
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-6">
+  <div v-else class="phone-screen">
+    <div class="phone-container">
 
-          <!-- Connected account -->
-          <div class="card shadow-sm">
-            <UserHeader :user="selectedUser" @disconnect="switchUser" />
-            <div class="card-body">
-              <div v-if="status === 'registering'" class="text-muted small text-center py-2">
-                {{ t('connectingServer') }}
-              </div>
-              <p v-else class="text-muted small text-center mb-0 py-2">
-                {{ t('hintUseFab') }}
-              </p>
-              <div v-if="callError" class="alert alert-danger mt-3 mb-0 py-2 small">
-                {{ t(callError) }}
-              </div>
-            </div>
+      <!-- Connected account -->
+      <div class="account-card">
+        <UserHeader :user="selectedUser" @disconnect="switchUser" />
+        <div class="account-card-body">
+          <div v-if="status === 'registering'" class="hint-text">
+            {{ t('connectingServer') }}
           </div>
-
-          <!-- Contact list -->
-          <div class="mt-3">
-            <Contacts :contacts="otherContacts" @call="handleContactCall" />
+          <p v-else class="hint-text">
+            {{ t('hintUseFab') }}
+          </p>
+          <div v-if="callError" class="error-banner">
+            {{ t(callError) }}
           </div>
-
         </div>
       </div>
+
+      <!-- Contact list -->
+      <div class="contact-list-wrap">
+        <Contacts :contacts="otherContacts" @call="handleContactCall" />
+      </div>
+
     </div>
 
     <!-- FAB: opens the call composer -->
@@ -79,13 +69,13 @@
 
     <!-- Popup: keypad / incoming call / ongoing call -->
     <transition name="pop-fade">
-      <div v-if="dialerOpen" class="dialer-popup shadow-lg">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <span class="fw-semibold small">{{ dialerTitle }}</span>
+      <div v-if="dialerOpen" class="dialer-popup">
+        <div class="dialer-popup-header">
+          <span class="dialer-popup-title">{{ dialerTitle }}</span>
           <button class="btn-close-popup" :aria-label="t('close')" @click="dialerOpen = false">&times;</button>
         </div>
 
-        <div v-if="status === 'registering'" class="text-muted small text-center py-3">
+        <div v-if="status === 'registering'" class="dialer-hint">
           {{ t('connectingServer') }}
         </div>
 
@@ -102,7 +92,7 @@
             @call="makeCall"
           />
 
-          <p v-if="dialerTab === 'recent'" class="text-muted small text-center py-4 mb-0">
+          <p v-if="dialerTab === 'recent'" class="dialer-empty">
             {{ t('recentEmpty') }}
           </p>
 
@@ -157,7 +147,7 @@
           @toggle-speaker="toggleSpeaker"
         />
 
-        <div v-if="callError" class="alert alert-danger mt-3 mb-0 py-2 small">
+        <div v-if="callError" class="error-banner">
           {{ t(callError) }}
         </div>
       </div>
@@ -290,6 +280,144 @@ function switchUser() {
 </script>
 
 <style scoped>
+.account-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  padding: 24px 16px;
+}
+
+.account-card {
+  width: 100%;
+  max-width: 380px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.account-card-header {
+  padding: 18px 20px;
+  text-align: center;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.account-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.account-card-body {
+  padding: 18px 20px;
+}
+
+.account-subtitle {
+  margin: 0 0 14px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #868e96;
+}
+
+.account-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid #f1f3f5;
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.12s ease;
+}
+.account-row:hover {
+  background: #f8f9fa;
+}
+
+.account-row-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.account-row-badge {
+  flex-shrink: 0;
+  background: #28a745;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.error-banner {
+  margin-top: 12px;
+  background: #fdecea;
+  color: #b42318;
+  font-size: 0.78rem;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.phone-screen {
+  min-height: 100vh;
+  background: #f8f9fa;
+  padding: 24px 16px;
+}
+
+.phone-container {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.contact-list-wrap {
+  margin-top: 14px;
+}
+
+.hint-text {
+  margin: 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #868e96;
+  padding: 8px 0;
+}
+
+.dialer-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.dialer-popup-title {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.dialer-hint {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #868e96;
+  padding: 14px 0;
+}
+
+.dialer-empty {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #868e96;
+  padding: 18px 0;
+  margin: 0;
+}
+
 .dialer-fab {
   position: fixed;
   right: 24px;
@@ -333,6 +461,7 @@ function switchUser() {
   border-radius: 20px;
   padding: 16px;
   z-index: 1085;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
 }
 
 .btn-close-popup {

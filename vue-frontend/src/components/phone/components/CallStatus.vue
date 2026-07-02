@@ -3,7 +3,7 @@
 
     <div class="call-screen-header">
       <div class="call-screen-identity">
-        <div class="fw-semibold text-truncate">{{ target || t('call.unknownNumber') }}</div>
+        <div class="call-screen-name">{{ target || t('call.unknownNumber') }}</div>
         <div class="call-screen-subtitle">{{ subtitle }}</div>
       </div>
       <div class="call-screen-avatar">
@@ -115,6 +115,13 @@ const subtitle = computed(() => {
 
 .call-screen-identity {
   min-width: 0;
+}
+
+.call-screen-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .call-screen-subtitle {

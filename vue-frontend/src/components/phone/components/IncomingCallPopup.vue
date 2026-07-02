@@ -1,15 +1,15 @@
 <template>
   <transition name="pop-fade">
-    <div class="incoming-call-popup shadow-lg">
+    <div class="incoming-call-popup">
       <div class="avatar-circle">
         <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
           <path d="M12,12c2.21,0,4-1.79,4-4s-1.79-4-4-4-4,1.79-4,4S9.79,12,12,12z M12,14c-2.67,0-8,1.34-8,4v2h16v-2C20,15.34,14.67,14,12,14z" />
         </svg>
       </div>
 
-      <div class="flex-grow-1 text-truncate">
-        <div class="fw-semibold small text-truncate">{{ caller || t('call.unknownNumber') }}</div>
-        <div class="text-muted call-subtitle">{{ t('call.incomingEllipsis') }}</div>
+      <div class="call-popup-identity">
+        <div class="call-popup-name">{{ caller || t('call.unknownNumber') }}</div>
+        <div class="call-subtitle">{{ t('call.incomingEllipsis') }}</div>
       </div>
 
       <button class="call-btn call-btn-success" :title="t('call.answer')" :disabled="answering" @click="$emit('answer')">
@@ -48,10 +48,25 @@ const { t } = usePhoneI18n()
   background: #fff;
   border-radius: 16px;
   padding: 10px 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
+}
+
+.call-popup-identity {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.call-popup-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .call-subtitle {
   font-size: 0.7rem;
+  color: #868e96;
 }
 
 .avatar-circle {
