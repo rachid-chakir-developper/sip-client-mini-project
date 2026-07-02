@@ -45,13 +45,13 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import IconPerson    from './IconPerson.vue'
-import IconHangup    from './IconHangup.vue'
-import IconMic       from './IconMic.vue'
-import IconMicOff    from './IconMicOff.vue'
-import IconVolume    from './IconVolume.vue'
-import IconVolumeOff from './IconVolumeOff.vue'
-import { usePhoneI18n } from './usePhoneI18n'
+import IconPerson    from '../icons/IconPerson.vue'
+import IconHangup    from '../icons/IconHangup.vue'
+import IconMic       from '../icons/IconMic.vue'
+import IconMicOff    from '../icons/IconMicOff.vue'
+import IconVolume    from '../icons/IconVolume.vue'
+import IconVolumeOff from '../icons/IconVolumeOff.vue'
+import { usePhoneI18n } from '../hooks/usePhoneI18n'
 
 const props = defineProps<{
   status:        string

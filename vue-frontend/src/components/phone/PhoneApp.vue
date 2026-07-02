@@ -174,21 +174,21 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { useSIP } from './useSIP'
-import { usePhoneI18n } from './usePhoneI18n'
+import { useSIP } from './hooks/useSIP'
+import { usePhoneI18n } from './hooks/usePhoneI18n'
 import api from '@/api/index'
 
-import UserHeader          from './UserHeader.vue'
-import Dialer              from './Dialer.vue'
-import CallStatus          from './CallStatus.vue'
-import Contacts            from './Contacts.vue'
-import DialerContacts      from './DialerContacts.vue'
-import IconCall            from './IconCall.vue'
-import IconClock           from './IconClock.vue'
-import IconKeypad          from './IconKeypad.vue'
-import IconPerson          from './IconPerson.vue'
-import IncomingCallPopup   from './IncomingCallPopup.vue'
-import IncomingCallScreen  from './IncomingCallScreen.vue'
+import UserHeader          from './components/UserHeader.vue'
+import Dialer              from './components/Dialer.vue'
+import CallStatus          from './components/CallStatus.vue'
+import Contacts            from './components/Contacts.vue'
+import DialerContacts      from './components/DialerContacts.vue'
+import IncomingCallPopup   from './components/IncomingCallPopup.vue'
+import IncomingCallScreen  from './components/IncomingCallScreen.vue'
+import IconCall            from './icons/IconCall.vue'
+import IconClock           from './icons/IconClock.vue'
+import IconKeypad          from './icons/IconKeypad.vue'
+import IconPerson          from './icons/IconPerson.vue'
 
 interface User {
   username:   string

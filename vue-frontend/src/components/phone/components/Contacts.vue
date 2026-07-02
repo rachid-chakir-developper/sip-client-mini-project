@@ -21,7 +21,7 @@
 </template>
 
 <script setup lang="ts">
-import { usePhoneI18n } from './usePhoneI18n'
+import { usePhoneI18n } from '../hooks/usePhoneI18n'
 
 defineProps<{ contacts: any[] }>()
 defineEmits(['call'])

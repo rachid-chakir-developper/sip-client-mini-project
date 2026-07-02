@@ -8,7 +8,11 @@ import {
   RegistererState,
 } from 'sip.js'
 import type { Session } from 'sip.js'
-import { useRingbackTone } from './useRingbackTone'
+import { useRingbackTone }   from '../sound/useRingbackTone'
+import { useRingtone }       from '../sound/useRingtone'
+import { useBusyTone }       from '../sound/useBusyTone'
+import { useHangupTone }     from '../sound/useHangupTone'
+import { useReconnectTone }  from '../sound/useReconnectTone'
 
 interface SIPCredentials {
   extension:    string
@@ -28,7 +32,11 @@ export function useSIP() {
   const callStartedAt = ref<number | null>(null)
   const answering     = ref(false)
 
-  const ringbackTone = useRingbackTone()
+  const ringbackTone   = useRingbackTone()
+  const ringtone       = useRingtone()
+  const busyTone       = useBusyTone()
+  const hangupTone     = useHangupTone()
+  const reconnectTone  = useReconnectTone()
 
   const remoteAudio = document.createElement('audio')
   remoteAudio.autoplay = true
@@ -68,23 +76,39 @@ export function useSIP() {
           iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
         },
       },
+      // Retry a few times on unexpected transport drops (see onDisconnect
+      // below, which plays the reconnect alert tone while this is ongoing).
+      reconnectionAttempts: 3,
+      reconnectionDelay:    4,
     })
 
     ua.value.delegate = {
+      onConnect() {
+        reconnectTone.stop()
+      },
+      onDisconnect(error?: Error) {
+        // Only an unexpected transport drop (error set) warrants the alert —
+        // a clean disconnect (our own stop()) reports no error.
+        if (error) reconnectTone.start()
+      },
       onInvite(invitation: Invitation) {
         session.value = invitation
         status.value  = 'ringing'
         caller.value  = invitation.remoteIdentity?.displayName
           || invitation.remoteIdentity?.uri?.user
           || ''
+        ringtone.start()
 
         invitation.stateChange.addListener((state: SessionState) => {
           if (state === SessionState.Established) {
+            ringtone.stop()
             _attachAudio(invitation)
             status.value        = 'incall'
             callStartedAt.value = Date.now()
           }
           if (state === SessionState.Terminated) {
+            ringtone.stop()
+            if (status.value === 'incall') hangupTone.start()
             status.value        = 'registered'
             session.value       = null
             caller.value        = ''
@@ -111,6 +135,7 @@ export function useSIP() {
 
   async function call(target: string, server: string): Promise<void> {
     if (!ua.value) return
+    busyTone.stop()
 
     const inviter = new Inviter(
       ua.value,
@@ -126,6 +151,7 @@ export function useSIP() {
       }
       if (state === SessionState.Terminated) {
         ringbackTone.stop()
+        if (status.value === 'incall') hangupTone.start()
         status.value         = 'registered'
         session.value        = null
         callStartedAt.value  = null
@@ -141,7 +167,18 @@ export function useSIP() {
     // (PCM → Opus transcoding unavailable without a paid codec), so the
     // tone is generated locally while the call is ringing.
     ringbackTone.start()
-    await inviter.invite()
+    await inviter.invite({
+      requestDelegate: {
+        onReject: (response) => {
+          const code = response.message.statusCode
+          if (code === 486 || code === 600) {
+            ringbackTone.stop()
+            busyTone.start()
+            setTimeout(() => busyTone.stop(), 4000)
+          }
+        },
+      },
+    })
   }
 
   async function answer(): Promise<void> {
@@ -170,6 +207,10 @@ export function useSIP() {
 
   function stop(): void {
     ringbackTone.stop()
+    ringtone.stop()
+    busyTone.stop()
+    hangupTone.stop()
+    reconnectTone.stop()
     ua.value?.stop()
     ua.value      = null
     session.value = null
@@ -194,6 +235,10 @@ export function useSIP() {
 
   onUnmounted(() => {
     ringbackTone.stop()
+    ringtone.stop()
+    busyTone.stop()
+    hangupTone.stop()
+    reconnectTone.stop()
     ua.value?.stop()
     if (remoteAudio.parentNode) document.body.removeChild(remoteAudio)
   })

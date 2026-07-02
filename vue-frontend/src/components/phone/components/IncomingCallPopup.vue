@@ -24,9 +24,9 @@
 </template>
 
 <script setup lang="ts">
-import IconCall   from './IconCall.vue'
-import IconHangup from './IconHangup.vue'
-import { usePhoneI18n } from './usePhoneI18n'
+import IconCall   from '../icons/IconCall.vue'
+import IconHangup from '../icons/IconHangup.vue'
+import { usePhoneI18n } from '../hooks/usePhoneI18n'
 
 defineProps<{ caller: string; answering: boolean }>()
 defineEmits(['answer', 'hangup'])

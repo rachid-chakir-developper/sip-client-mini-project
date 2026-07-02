@@ -1,8 +1,8 @@
 import { ref } from 'vue'
-import fr from './locales/fr.json'
-import en from './locales/en.json'
-import es from './locales/es.json'
-import de from './locales/de.json'
+import fr from '../locales/fr.json'
+import en from '../locales/en.json'
+import es from '../locales/es.json'
+import de from '../locales/de.json'
 
 export type PhoneLocale = 'fr' | 'en' | 'es' | 'de'
 

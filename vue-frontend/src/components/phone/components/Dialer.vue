@@ -38,8 +38,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import IconCall from './IconCall.vue'
-import { usePhoneI18n } from './usePhoneI18n'
+import IconCall from '../icons/IconCall.vue'
+import { usePhoneI18n } from '../hooks/usePhoneI18n'
 
 const props = defineProps<{ modelValue: string }>()
 const emit  = defineEmits(['update:modelValue', 'call'])

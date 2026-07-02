@@ -33,9 +33,9 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import IconPerson from './IconPerson.vue'
-import IconCall    from './IconCall.vue'
-import { usePhoneI18n } from './usePhoneI18n'
+import IconPerson from '../icons/IconPerson.vue'
+import IconCall    from '../icons/IconCall.vue'
+import { usePhoneI18n } from '../hooks/usePhoneI18n'
 
 interface Contact {
   first_name: string
