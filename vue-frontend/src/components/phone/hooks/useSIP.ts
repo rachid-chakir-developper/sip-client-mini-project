@@ -31,6 +31,20 @@ export function useSIP() {
   const speakerMuted  = ref(false)
   const callStartedAt = ref<number | null>(null)
   const answering     = ref(false)
+  const callNotice    = ref<string | null>(null)
+
+  let noticeTimer: ReturnType<typeof setTimeout> | null = null
+
+  // Shows a self-dismissing banner (i18n key), like a phone's "Busy" / "Call
+  // declined" toast. `durationMs` controls how long it stays visible.
+  function showNotice(key: string, durationMs = 4000): void {
+    callNotice.value = key
+    if (noticeTimer) clearTimeout(noticeTimer)
+    noticeTimer = setTimeout(() => {
+      callNotice.value = null
+      noticeTimer = null
+    }, durationMs)
+  }
 
   const ringbackTone   = useRingbackTone()
   const ringtone       = useRingtone()
@@ -171,10 +185,19 @@ export function useSIP() {
       requestDelegate: {
         onReject: (response) => {
           const code = response.message.statusCode
+          ringbackTone.stop()
           if (code === 486 || code === 600) {
-            ringbackTone.stop()
             busyTone.start()
             setTimeout(() => busyTone.stop(), 4000)
+            showNotice('notice.busy')
+          } else if (code === 603) {
+            showNotice('notice.declined')
+          } else if (code === 404) {
+            showNotice('notice.notFound')
+          } else if (code === 480) {
+            showNotice('notice.unavailable')
+          } else if (code !== undefined) {
+            showNotice('notice.failed')
           }
         },
       },
@@ -211,6 +234,11 @@ export function useSIP() {
     busyTone.stop()
     hangupTone.stop()
     reconnectTone.stop()
+    if (noticeTimer) {
+      clearTimeout(noticeTimer)
+      noticeTimer = null
+    }
+    callNotice.value = null
     ua.value?.stop()
     ua.value      = null
     session.value = null
@@ -239,12 +267,13 @@ export function useSIP() {
     busyTone.stop()
     hangupTone.stop()
     reconnectTone.stop()
+    if (noticeTimer) clearTimeout(noticeTimer)
     ua.value?.stop()
     if (remoteAudio.parentNode) document.body.removeChild(remoteAudio)
   })
 
   return {
-    status, caller, muted, speakerMuted, callStartedAt, answering,
+    status, caller, muted, speakerMuted, callStartedAt, answering, callNotice,
     init, call, answer, hangup, stop, toggleMute, toggleSpeaker,
   }
 }

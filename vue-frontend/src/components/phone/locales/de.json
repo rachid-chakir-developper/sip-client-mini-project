@@ -54,5 +54,12 @@
     "loadUsers": "Benutzer konnten nicht geladen werden.",
     "sipConnection": "SIP-Verbindung fehlgeschlagen.",
     "callFailed": "Anruf konnte nicht getätigt werden."
+  },
+  "notice": {
+    "busy": "Besetzt",
+    "declined": "Anruf abgelehnt",
+    "unavailable": "Nicht erreichbar",
+    "notFound": "Nummer nicht gefunden",
+    "failed": "Anruf fehlgeschlagen"
   }
 }

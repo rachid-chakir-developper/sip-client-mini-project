@@ -54,5 +54,12 @@
     "loadUsers": "Impossible de charger les utilisateurs.",
     "sipConnection": "Erreur de connexion SIP.",
     "callFailed": "Impossible de passer l'appel."
+  },
+  "notice": {
+    "busy": "Occupé",
+    "declined": "Appel refusé",
+    "unavailable": "Correspondant indisponible",
+    "notFound": "Numéro inexistant",
+    "failed": "Échec de l'appel"
   }
 }

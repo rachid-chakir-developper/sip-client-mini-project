@@ -74,6 +74,9 @@
       <IconCall />
     </button>
 
+    <!-- Self-dismissing banner: busy / declined / call failed…, to the left of the FAB -->
+    <CallNotice :message="noticeMessage" />
+
     <!-- Popup: keypad / incoming call / ongoing call -->
     <transition name="pop-fade">
       <div v-if="dialerOpen" class="dialer-popup shadow-lg">
@@ -185,6 +188,7 @@ import Contacts            from './components/Contacts.vue'
 import DialerContacts      from './components/DialerContacts.vue'
 import IncomingCallPopup   from './components/IncomingCallPopup.vue'
 import IncomingCallScreen  from './components/IncomingCallScreen.vue'
+import CallNotice          from './components/CallNotice.vue'
 import IconCall            from './icons/IconCall.vue'
 import IconClock           from './icons/IconClock.vue'
 import IconKeypad          from './icons/IconKeypad.vue'
@@ -200,7 +204,7 @@ interface User {
 const props = defineProps<{ locale?: string }>()
 
 const {
-  status, caller, muted, speakerMuted, callStartedAt, answering,
+  status, caller, muted, speakerMuted, callStartedAt, answering, callNotice,
   init, call, answer, hangup, stop, toggleMute, toggleSpeaker,
 } = useSIP()
 
@@ -209,6 +213,8 @@ const { t, setLocale } = usePhoneI18n()
 watch(() => props.locale, val => {
   if (val) setLocale(val)
 }, { immediate: true })
+
+const noticeMessage = computed(() => callNotice.value ? t(callNotice.value) : null)
 
 const users        = ref<User[]>([])
 const selectedUser = ref<User | null>(null)

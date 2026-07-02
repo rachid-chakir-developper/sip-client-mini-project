@@ -54,5 +54,12 @@
     "loadUsers": "Unable to load users.",
     "sipConnection": "SIP connection failed.",
     "callFailed": "Unable to place the call."
+  },
+  "notice": {
+    "busy": "Busy",
+    "declined": "Call declined",
+    "unavailable": "Unavailable",
+    "notFound": "Number not found",
+    "failed": "Call failed"
   }
 }

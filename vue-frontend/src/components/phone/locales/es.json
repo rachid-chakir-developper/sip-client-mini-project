@@ -54,5 +54,12 @@
     "loadUsers": "No se pudo cargar la lista de usuarios.",
     "sipConnection": "Error de conexión SIP.",
     "callFailed": "No se pudo realizar la llamada."
+  },
+  "notice": {
+    "busy": "Ocupado",
+    "declined": "Llamada rechazada",
+    "unavailable": "No disponible",
+    "notFound": "Número inexistente",
+    "failed": "Llamada fallida"
   }
 }
