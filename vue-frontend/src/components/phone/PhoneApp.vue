@@ -1,39 +1,12 @@
 <template>
 
-  <!-- ── Account selection ── -->
-  <div v-if="!selectedUser" class="account-screen">
-    <div class="account-card">
-      <div class="account-card-header">
-        <h1 class="account-title">{{ t('title') }}</h1>
-      </div>
-      <div class="account-card-body">
-        <p class="account-subtitle">{{ t('chooseAccount') }}</p>
-        <div class="account-list">
-          <button
-            v-for="u in users"
-            :key="u.extension"
-            type="button"
-            class="account-row"
-            @click="selectUser(u)"
-          >
-            <span class="account-row-name">{{ u.first_name }} {{ u.last_name }}</span>
-            <span class="account-row-badge">{{ u.extension }}</span>
-          </button>
-        </div>
-        <div v-if="loadError" class="error-banner">
-          {{ t(loadError) }}
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ── Phone interface + contacts ── -->
-  <div v-else class="phone-screen">
+  <div class="phone-screen">
     <div class="phone-container">
 
       <!-- Connected account -->
       <div class="account-card">
-        <UserHeader :user="selectedUser" @disconnect="switchUser" />
+        <UserHeader :user="headerUser" @disconnect="disconnect" />
         <div class="account-card-body">
           <div v-if="status === 'registering'" class="hint-text">
             {{ t('connectingServer') }}
@@ -49,6 +22,7 @@
 
       <!-- Contact list -->
       <div class="contact-list-wrap">
+        <div v-if="loadError" class="error-banner">{{ t(loadError) }}</div>
         <Contacts :contacts="otherContacts" @call="handleContactCall" />
       </div>
 
@@ -184,14 +158,21 @@ import IconClock           from './icons/IconClock.vue'
 import IconKeypad          from './icons/IconKeypad.vue'
 import IconPerson          from './icons/IconPerson.vue'
 
-interface User {
+interface AuthUser {
+  username:   string
+  first_name: string
+  last_name:  string
+}
+
+interface Contact {
   username:   string
   first_name: string
   last_name:  string
   extension:  string
 }
 
-const props = defineProps<{ locale?: string }>()
+const props = defineProps<{ locale?: string, currentUser: AuthUser }>()
+const emit  = defineEmits<{ logout: [] }>()
 
 const {
   status, caller, muted, speakerMuted, callStartedAt, answering, callNotice,
@@ -206,14 +187,16 @@ watch(() => props.locale, val => {
 
 const noticeMessage = computed(() => callNotice.value ? t(callNotice.value) : null)
 
-const users        = ref<User[]>([])
-const selectedUser = ref<User | null>(null)
+const myExtension  = ref('')
+const otherContacts = ref<Contact[]>([])
 const sipServer    = ref('')
 const target       = ref('')
 const loadError    = ref('')
 const callError    = ref('')
 const dialerOpen   = ref(false)
 const dialerTab    = ref<'recent' | 'keypad' | 'contacts'>('contacts')
+
+const headerUser = computed(() => ({ ...props.currentUser, extension: myExtension.value }))
 
 watch(status, val => {
   if (val === 'calling' || val === 'incall' || val === 'ringing') dialerOpen.value = true
@@ -227,34 +210,24 @@ const dialerTitle = computed(() => {
   return t('titles.call')
 })
 
-const otherContacts = computed(() =>
-  users.value.filter(u => u.extension !== selectedUser.value?.extension)
-)
-
 onMounted(async () => {
   try {
-    const { data } = await api.get('/users/')
-    users.value = data
+    const { data } = await api.get('/contacts/')
+    otherContacts.value = data
   } catch {
-    loadError.value = 'errors.loadUsers'
+    loadError.value = 'errors.loadContacts'
   }
-})
 
-async function selectUser(user: User) {
-  callError.value    = ''
-  selectedUser.value = user
   try {
-    const { data } = await api.get('/sip/credentials/', {
-      params: { extension: user.extension },
-    })
-    sipServer.value = data.server
+    const { data } = await api.get('/sip/me/')
+    myExtension.value = data.extension
+    sipServer.value    = data.server
     await init(data)
   } catch (e) {
-    callError.value    = 'errors.sipConnection'
-    selectedUser.value = null
+    callError.value = 'errors.sipConnection'
     console.error(e)
   }
-}
+})
 
 async function makeCall(number: string) {
   if (!number) return
@@ -271,24 +244,13 @@ function handleContactCall(extension: string) {
   makeCall(extension)
 }
 
-function switchUser() {
+function disconnect() {
   stop()
-  selectedUser.value = null
-  target.value       = ''
-  callError.value    = ''
+  emit('logout')
 }
 </script>
 
 <style scoped>
-.account-screen {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f8f9fa;
-  padding: 24px 16px;
-}
-
 .account-card {
   width: 100%;
   max-width: 380px;
@@ -298,65 +260,8 @@ function switchUser() {
   overflow: hidden;
 }
 
-.account-card-header {
-  padding: 18px 20px;
-  text-align: center;
-  border-bottom: 1px solid #f1f3f5;
-}
-
-.account-title {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
 .account-card-body {
   padding: 18px 20px;
-}
-
-.account-subtitle {
-  margin: 0 0 14px;
-  text-align: center;
-  font-size: 0.8rem;
-  color: #868e96;
-}
-
-.account-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.account-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  border: 1px solid #f1f3f5;
-  background: #fff;
-  border-radius: 10px;
-  padding: 10px 14px;
-  cursor: pointer;
-  text-align: left;
-  transition: background-color 0.12s ease;
-}
-.account-row:hover {
-  background: #f8f9fa;
-}
-
-.account-row-name {
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.account-row-badge {
-  flex-shrink: 0;
-  background: #28a745;
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 999px;
 }
 
 .error-banner {

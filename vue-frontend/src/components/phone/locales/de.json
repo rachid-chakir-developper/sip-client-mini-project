@@ -51,7 +51,7 @@
     "unmuteSpeaker": "Ton aktivieren"
   },
   "errors": {
-    "loadUsers": "Benutzer konnten nicht geladen werden.",
+    "loadContacts": "Kontakte konnten nicht geladen werden.",
     "sipConnection": "SIP-Verbindung fehlgeschlagen.",
     "callFailed": "Anruf konnte nicht getätigt werden."
   },

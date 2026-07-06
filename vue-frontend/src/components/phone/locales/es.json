@@ -51,7 +51,7 @@
     "unmuteSpeaker": "Activar sonido"
   },
   "errors": {
-    "loadUsers": "No se pudo cargar la lista de usuarios.",
+    "loadContacts": "No se pudieron cargar los contactos.",
     "sipConnection": "Error de conexión SIP.",
     "callFailed": "No se pudo realizar la llamada."
   },

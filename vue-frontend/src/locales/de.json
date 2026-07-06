@@ -1,0 +1,13 @@
+{
+  "appTitle": "SIP Phone",
+  "login": {
+    "title": "Anmelden",
+    "username": "Benutzername",
+    "password": "Passwort",
+    "submit": "Anmelden",
+    "submitting": "Anmeldung…"
+  },
+  "errors": {
+    "loginFailed": "Ungültige Anmeldedaten."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "appTitle": "SIP Phone",
+  "login": {
+    "title": "Connexion",
+    "username": "Identifiant",
+    "password": "Mot de passe",
+    "submit": "Se connecter",
+    "submitting": "Connexion…"
+  },
+  "errors": {
+    "loginFailed": "Identifiants invalides."
+  }
+}

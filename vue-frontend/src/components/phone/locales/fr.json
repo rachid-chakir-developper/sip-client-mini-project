@@ -51,7 +51,7 @@
     "unmuteSpeaker": "Réactiver le son"
   },
   "errors": {
-    "loadUsers": "Impossible de charger les utilisateurs.",
+    "loadContacts": "Impossible de charger les contacts.",
     "sipConnection": "Erreur de connexion SIP.",
     "callFailed": "Impossible de passer l'appel."
   },

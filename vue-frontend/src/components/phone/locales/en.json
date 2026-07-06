@@ -51,7 +51,7 @@
     "unmuteSpeaker": "Unmute sound"
   },
   "errors": {
-    "loadUsers": "Unable to load users.",
+    "loadContacts": "Unable to load contacts.",
     "sipConnection": "SIP connection failed.",
     "callFailed": "Unable to place the call."
   },

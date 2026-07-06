@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -55,16 +56,35 @@ DATABASES = {
     }
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = os.environ.get(
+    'CORS_ALLOWED_ORIGINS', 'http://localhost:3000'
+).split(',')
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = os.environ.get(
+    'CSRF_TRUSTED_ORIGINS', 'http://localhost:3000'
+).split(',')
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [],
-    'DEFAULT_PERMISSION_CLASSES':     [],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
 }
 
 # Asterisk settings
 ASTERISK_HOST   = 'localhost'
 ASTERISK_WS_URL = 'ws://localhost:8088/ws'
+
+# Symmetric key (Fernet) used to encrypt SIP passwords at rest.
+# In production, set SIP_ENCRYPTION_KEY via the environment (generated once
+# with `Fernet.generate_key()`) and never change it without re-encrypting
+# the existing accounts.
+SIP_ENCRYPTION_KEY = os.environ.get(
+    'SIP_ENCRYPTION_KEY', 'eqH6lTuVwfF9fiB_Ngqlr7B0smDrSzYUI_dWb71LpmE='
+)
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
