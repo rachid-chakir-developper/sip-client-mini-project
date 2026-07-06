@@ -1,18 +1,16 @@
 {
-  "title": "SIP Phone",
-  "chooseAccount": "Elige tu cuenta",
-  "disconnect": "Desconectar",
   "close": "Cerrar",
   "fabTitle": "Abrir el teclado de llamada",
   "connectingServer": "Conectando al servidor SIP…",
-  "hintUseFab": "Usa el botón de llamada en la parte inferior derecha para marcar un número.",
   "status": {
     "disconnected": "Desconectado",
     "registering": "Conectando…",
     "registered": "Disponible",
     "calling": "Llamando",
     "ringing": "Llamada entrante",
-    "incall": "En llamada"
+    "incall": "En llamada",
+    "reconnecting": "Reconectando…",
+    "error": "Problema de conexión SIP"
   },
   "titles": {
     "call": "Llamar",
@@ -31,7 +29,6 @@
     "backspace": "Borrar"
   },
   "contacts": {
-    "title": "Contactos",
     "searchPlaceholder": "Buscar un contacto…",
     "empty": "Sin contactos"
   },
@@ -51,7 +48,6 @@
     "unmuteSpeaker": "Activar sonido"
   },
   "errors": {
-    "loadContacts": "No se pudieron cargar los contactos.",
     "sipConnection": "Error de conexión SIP.",
     "callFailed": "No se pudo realizar la llamada."
   },

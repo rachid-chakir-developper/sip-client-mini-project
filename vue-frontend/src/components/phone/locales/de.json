@@ -1,18 +1,16 @@
 {
-  "title": "SIP Phone",
-  "chooseAccount": "Konto auswählen",
-  "disconnect": "Trennen",
   "close": "Schließen",
   "fabTitle": "Wähltastatur öffnen",
   "connectingServer": "Verbindung mit dem SIP-Server…",
-  "hintUseFab": "Nutzen Sie die Anruftaste unten rechts, um eine Nummer zu wählen.",
   "status": {
     "disconnected": "Getrennt",
     "registering": "Verbindung wird aufgebaut…",
     "registered": "Verfügbar",
     "calling": "Anruf läuft",
     "ringing": "Eingehender Anruf",
-    "incall": "Im Gespräch"
+    "incall": "Im Gespräch",
+    "reconnecting": "Verbindung wird wiederhergestellt…",
+    "error": "SIP-Verbindungsproblem"
   },
   "titles": {
     "call": "Anrufen",
@@ -31,7 +29,6 @@
     "backspace": "Löschen"
   },
   "contacts": {
-    "title": "Kontakte",
     "searchPlaceholder": "Kontakt suchen…",
     "empty": "Keine Kontakte"
   },
@@ -51,7 +48,6 @@
     "unmuteSpeaker": "Ton aktivieren"
   },
   "errors": {
-    "loadContacts": "Kontakte konnten nicht geladen werden.",
     "sipConnection": "SIP-Verbindung fehlgeschlagen.",
     "callFailed": "Anruf konnte nicht getätigt werden."
   },

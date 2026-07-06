@@ -1,15 +1,15 @@
 import { ref } from 'vue'
-import fr from '../locales/fr.json'
 import en from '../locales/en.json'
+import fr from '../locales/fr.json'
 import es from '../locales/es.json'
 import de from '../locales/de.json'
 
 export type AppLocale = 'fr' | 'en' | 'es' | 'de'
 
-const FALLBACK_LOCALE: AppLocale = 'fr'
+const FALLBACK_LOCALE: AppLocale = 'en'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const dictionaries: Record<AppLocale, any> = { fr, en, es, de }
+const dictionaries: Record<AppLocale, any> = { en, fr, es, de }
 
 function detectLocale(): AppLocale {
   const lang = (navigator.language || FALLBACK_LOCALE).slice(0, 2).toLowerCase()

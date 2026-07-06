@@ -1,5 +1,6 @@
 {
   "appTitle": "SIP Phone",
+  "disconnect": "Desconectar",
   "login": {
     "title": "Iniciar sesión",
     "username": "Usuario",

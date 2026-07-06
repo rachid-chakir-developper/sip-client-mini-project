@@ -10,10 +10,10 @@ User = get_user_model()
 
 class SipAccountInlineForm(forms.ModelForm):
     password = forms.CharField(
-        label="Mot de passe SIP",
+        label="SIP password",
         required=False,
         widget=forms.PasswordInput(render_value=False),
-        help_text="Laisser vide pour ne pas modifier le mot de passe existant.",
+        help_text="Leave blank to keep the current password.",
     )
 
     class Meta:
@@ -24,7 +24,7 @@ class SipAccountInlineForm(forms.ModelForm):
         cleaned_data = super().clean()
         if not self.instance.pk and not cleaned_data.get('password'):
             raise forms.ValidationError(
-                "Un mot de passe SIP est requis à la création du compte."
+                "A SIP password is required when creating the account."
             )
         return cleaned_data
 
@@ -44,15 +44,15 @@ class SipAccountInline(admin.StackedInline):
     can_delete = True
     extra = 0
     max_num = 1
-    verbose_name = "Compte SIP"
-    verbose_name_plural = "Compte SIP"
+    verbose_name = "SIP account"
+    verbose_name_plural = "SIP account"
 
 
 class UserAdmin(DjangoUserAdmin):
     inlines = [SipAccountInline]
     list_display = DjangoUserAdmin.list_display + ('sip_extension',)
 
-    @admin.display(description="Extension SIP")
+    @admin.display(description="SIP extension")
     def sip_extension(self, obj):
         return getattr(getattr(obj, 'sip_account', None), 'extension', '—')
 

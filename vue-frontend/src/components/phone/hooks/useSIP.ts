@@ -46,6 +46,114 @@ export function useSIP() {
     }, durationMs)
   }
 
+  // Reassigned on every (re)registration attempt; referenced by the
+  // reconnection logic below.
+  let registerer: Registerer | null = null
+  let reconnectTimer:    ReturnType<typeof setTimeout> | null = null
+  let reRegisterTimer:   ReturnType<typeof setTimeout> | null = null
+  let registerTimeout:   ReturnType<typeof setTimeout> | null = null
+
+  const RETRY_INTERVAL_MS   = 5000
+  const REGISTER_TIMEOUT_MS = 8000
+
+  function clearRegisterTimeout(): void {
+    if (registerTimeout) {
+      clearTimeout(registerTimeout)
+      registerTimeout = null
+    }
+  }
+
+  function stopReconnecting(): void {
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer)
+      reconnectTimer = null
+    }
+    if (reRegisterTimer) {
+      clearTimeout(reRegisterTimer)
+      reRegisterTimer = null
+    }
+    clearRegisterTimeout()
+  }
+
+  // A fresh Registerer per attempt — reusing one across a failed/stuck
+  // attempt risks it staying stuck "waiting" on a REGISTER that never got a
+  // final response, which would silently block every future register() call
+  // on that same instance.
+  function createRegisterer(): void {
+    registerer = new Registerer(ua.value!)
+    registerer.stateChange.addListener((s: RegistererState) => {
+      if (s === RegistererState.Registered) {
+        clearRegisterTimeout()
+        status.value = 'registered'
+      }
+      // We never call registerer.unregister() ourselves (stop() tears down
+      // the whole transport instead), so reaching Unregistered/Terminated
+      // here only ever means the server rejected/dropped the registration.
+      if (s === RegistererState.Unregistered || s === RegistererState.Terminated) {
+        failRegistration()
+      }
+    })
+  }
+
+  function failRegistration(): void {
+    clearRegisterTimeout()
+    status.value = 'error'
+    showNotice('errors.sipConnection')
+    scheduleReRegister()
+  }
+
+  function registerOrFail(): void {
+    status.value = 'registering'
+    clearRegisterTimeout()
+    // Guards against a REGISTER that never gets a final response (accepted
+    // or rejected) — without this, a stuck request leaves the FAB spinning
+    // forever with no way out.
+    registerTimeout = setTimeout(() => {
+      registerTimeout = null
+      failRegistration()
+    }, REGISTER_TIMEOUT_MS)
+
+    registerer!.register({
+      requestDelegate: {
+        // The registration promise itself resolves even when the server
+        // rejects it (e.g. wrong password) — the rejection only shows up
+        // here, via the REGISTER response.
+        onReject: () => failRegistration(),
+      },
+    }).catch(() => failRegistration())
+  }
+
+  // Retries registration (with a brand new Registerer) every few seconds,
+  // indefinitely, until it succeeds or the widget is stopped.
+  function scheduleReRegister(): void {
+    if (reRegisterTimer) return
+    reRegisterTimer = setTimeout(() => {
+      reRegisterTimer = null
+      // Bail out if something else already took over in the meantime (the
+      // transport dropped again, or we were stopped).
+      if (!ua.value || status.value !== 'error') return
+      createRegisterer()
+      registerOrFail()
+    }, RETRY_INTERVAL_MS)
+  }
+
+  // sip.js's own reconnectionAttempts gives up after a fixed number of
+  // tries — not good enough for something like "the Asterisk container was
+  // restarted and took a minute to come back". So it's disabled (see
+  // reconnectionAttempts: 0 below) and we retry ourselves, indefinitely,
+  // until the transport is back — this loop is the only thing that stops
+  // it (via stopReconnecting(), called from onConnect and stop()).
+  function scheduleReconnect(immediate = false): void {
+    if (reconnectTimer) return
+    reconnectTimer = setTimeout(() => {
+      reconnectTimer = null
+      if (!ua.value) return // stop() ran while we were waiting
+      ua.value.reconnect().catch(() => {
+        if (status.value === 'reconnecting') scheduleReconnect()
+      })
+    }, immediate ? 0 : RETRY_INTERVAL_MS)
+  }
+
   const ringbackTone   = useRingbackTone()
   const ringtone       = useRingtone()
   const busyTone       = useBusyTone()
@@ -64,14 +172,14 @@ export function useSIP() {
     pc.ontrack = (event: RTCTrackEvent) => {
       if (event.streams[0]) {
         remoteAudio.srcObject = event.streams[0]
-        remoteAudio.play().catch((e: unknown) => console.warn('[SIP] Audio bloqué:', e))
+        remoteAudio.play().catch((e: unknown) => console.warn('[SIP] Audio playback blocked:', e))
       }
     }
 
     const existing = pc.getReceivers().filter(r => r.track).map(r => r.track)
     if (existing.length) {
       remoteAudio.srcObject = new MediaStream(existing)
-      remoteAudio.play().catch((e: unknown) => console.warn('[SIP] Audio bloqué:', e))
+      remoteAudio.play().catch((e: unknown) => console.warn('[SIP] Audio playback blocked:', e))
     }
   }
 
@@ -90,20 +198,31 @@ export function useSIP() {
           iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
         },
       },
-      // Retry a few times on unexpected transport drops (see onDisconnect
-      // below, which plays the reconnect alert tone while this is ongoing).
-      reconnectionAttempts: 3,
-      reconnectionDelay:    4,
+      // sip.js's built-in retry is disabled — we drive reconnection
+      // ourselves (see scheduleReconnect above) so it keeps trying no
+      // matter how long the SIP server is down for.
+      reconnectionAttempts: 0,
     })
 
     ua.value.delegate = {
       onConnect() {
         reconnectTone.stop()
+        stopReconnecting()
+        // The transport came back after an unexpected drop — the previous
+        // registration is stale, so register again with a fresh Registerer.
+        if (status.value === 'reconnecting') {
+          createRegisterer()
+          registerOrFail()
+        }
       },
       onDisconnect(error?: Error) {
         // Only an unexpected transport drop (error set) warrants the alert —
         // a clean disconnect (our own stop()) reports no error.
-        if (error) reconnectTone.start()
+        if (error) {
+          status.value = 'reconnecting'
+          reconnectTone.start()
+          scheduleReconnect(true)
+        }
       },
       onInvite(invitation: Invitation) {
         session.value = invitation
@@ -137,14 +256,8 @@ export function useSIP() {
 
     await ua.value.start()
 
-    const registerer = new Registerer(ua.value)
-    registerer.stateChange.addListener((s: RegistererState) => {
-      if (s === RegistererState.Registered)   status.value = 'registered'
-      if (s === RegistererState.Unregistered) status.value = 'disconnected'
-    })
-
-    status.value = 'registering'
-    await registerer.register()
+    createRegisterer()
+    registerOrFail()
   }
 
   async function call(target: string, server: string): Promise<void> {
@@ -234,6 +347,7 @@ export function useSIP() {
     busyTone.stop()
     hangupTone.stop()
     reconnectTone.stop()
+    stopReconnecting()
     if (noticeTimer) {
       clearTimeout(noticeTimer)
       noticeTimer = null
@@ -241,6 +355,7 @@ export function useSIP() {
     callNotice.value = null
     ua.value?.stop()
     ua.value      = null
+    registerer    = null
     session.value = null
     status.value  = 'disconnected'
   }
@@ -267,6 +382,7 @@ export function useSIP() {
     busyTone.stop()
     hangupTone.stop()
     reconnectTone.stop()
+    stopReconnecting()
     if (noticeTimer) clearTimeout(noticeTimer)
     ua.value?.stop()
     if (remoteAudio.parentNode) document.body.removeChild(remoteAudio)

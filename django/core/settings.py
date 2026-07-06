@@ -75,8 +75,10 @@ REST_FRAMEWORK = {
 }
 
 # Asterisk settings
-ASTERISK_HOST   = 'localhost'
-ASTERISK_WS_URL = 'ws://localhost:8088/ws'
+ASTERISK_HOST = os.environ.get('ASTERISK_HOST', 'localhost')
+ASTERISK_WS_URL = os.environ.get(
+    'ASTERISK_WS_URL', 'ws://localhost:8088/ws'
+)
 
 # Symmetric key (Fernet) used to encrypt SIP passwords at rest.
 # In production, set SIP_ENCRYPTION_KEY via the environment (generated once
@@ -93,7 +95,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-LANGUAGE_CODE = 'fr-fr'
+LANGUAGE_CODE = 'en-us'
 TIME_ZONE     = 'Europe/Paris'
 USE_I18N = True
 USE_TZ   = True

@@ -1,44 +1,28 @@
 <template>
 
-  <!-- ── Phone interface + contacts ── -->
-  <div class="phone-screen">
-    <div class="phone-container">
-
-      <!-- Connected account -->
-      <div class="account-card">
-        <UserHeader :user="headerUser" @disconnect="disconnect" />
-        <div class="account-card-body">
-          <div v-if="status === 'registering'" class="hint-text">
-            {{ t('connectingServer') }}
-          </div>
-          <p v-else class="hint-text">
-            {{ t('hintUseFab') }}
-          </p>
-          <div v-if="callError" class="error-banner">
-            {{ t(callError) }}
-          </div>
-        </div>
-      </div>
-
-      <!-- Contact list -->
-      <div class="contact-list-wrap">
-        <div v-if="loadError" class="error-banner">{{ t(loadError) }}</div>
-        <Contacts :contacts="otherContacts" @call="handleContactCall" />
-      </div>
-
-    </div>
+  <!-- Self-contained floating widget: a single FAB + its popups. No page
+       layout of its own — safe to drop anywhere in a host app, on every
+       screen, regardless of routing. -->
+  <div class="phone-widget">
 
     <!-- FAB: opens the call composer -->
     <button
       class="dialer-fab"
-      :class="{ 'dialer-fab-active': status === 'calling' || status === 'incall' || status === 'ringing' }"
-      :title="t('fabTitle')"
+      :class="{
+        'dialer-fab-active':       status === 'calling' || status === 'incall' || status === 'ringing',
+        'dialer-fab-connecting':   status === 'registering' || status === 'disconnected',
+        'dialer-fab-reconnecting': status === 'reconnecting',
+        'dialer-fab-error':        status === 'error',
+      }"
+      :title="fabTitle"
       @click="dialerOpen = !dialerOpen"
     >
-      <IconCall />
+      <span v-if="status === 'registering' || status === 'reconnecting'" class="fab-spinner" />
+      <IconWarning v-else-if="status === 'error'" />
+      <IconCall v-else />
     </button>
 
-    <!-- Self-dismissing banner: busy / declined / call failed…, to the left of the FAB -->
+    <!-- Self-dismissing banner: connection errors, busy / declined / call failed…, to the left of the FAB -->
     <CallNotice :message="noticeMessage" />
 
     <!-- Popup: keypad / incoming call / ongoing call -->
@@ -53,10 +37,14 @@
           {{ t('connectingServer') }}
         </div>
 
+        <div v-if="status === 'reconnecting' || status === 'error'" class="dialer-hint">
+          {{ t(`status.${status}`) }}
+        </div>
+
         <template v-if="status === 'registered'">
           <DialerContacts
             v-if="dialerTab === 'contacts'"
-            :contacts="otherContacts"
+            :contacts="contacts"
             @call="handleContactCall"
           />
 
@@ -120,10 +108,6 @@
           @toggle-mute="toggleMute"
           @toggle-speaker="toggleSpeaker"
         />
-
-        <div v-if="callError" class="error-banner">
-          {{ t(callError) }}
-        </div>
       </div>
     </transition>
 
@@ -143,12 +127,9 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useSIP } from './hooks/useSIP'
 import { usePhoneI18n } from './hooks/usePhoneI18n'
-import api from '@/api/index'
 
-import UserHeader          from './components/UserHeader.vue'
 import Dialer              from './components/Dialer.vue'
 import CallStatus          from './components/CallStatus.vue'
-import Contacts            from './components/Contacts.vue'
 import DialerContacts      from './components/DialerContacts.vue'
 import IncomingCallPopup   from './components/IncomingCallPopup.vue'
 import IncomingCallScreen  from './components/IncomingCallScreen.vue'
@@ -157,26 +138,37 @@ import IconCall            from './icons/IconCall.vue'
 import IconClock           from './icons/IconClock.vue'
 import IconKeypad          from './icons/IconKeypad.vue'
 import IconPerson          from './icons/IconPerson.vue'
+import IconWarning         from './icons/IconWarning.vue'
 
-interface AuthUser {
-  username:   string
-  first_name: string
-  last_name:  string
+// Public contract of this module — kept intentionally backend-agnostic so
+// the whole `phone/` folder can be copied into another Vue app unchanged.
+// See ./README.md for the integration guide and the backend contract a host
+// app must implement to supply these props.
+export interface PhoneUser {
+  displayName: string
+  extension:   string
+  password:    string
 }
 
-interface Contact {
-  username:   string
-  first_name: string
-  last_name:  string
-  extension:  string
+export interface PhoneContact {
+  displayName: string
+  extension:   string
 }
 
-const props = defineProps<{ locale?: string, currentUser: AuthUser }>()
-const emit  = defineEmits<{ logout: [] }>()
+const props = defineProps<{
+  /** WebSocket URI of the SIP server transport, e.g. "wss://sip.example.com:8089/ws". */
+  sipServerUri: string
+  /** SIP identity used to register this session — who "I" am. */
+  currentUser:  PhoneUser
+  /** Other reachable SIP endpoints, shown in the dialer's contacts tab. */
+  contacts:     PhoneContact[]
+  /** Optional UI locale override ('fr' | 'en' | 'es' | 'de'); auto-detected otherwise. */
+  locale?: string
+}>()
 
 const {
   status, caller, muted, speakerMuted, callStartedAt, answering, callNotice,
-  init, call, answer, hangup, stop, toggleMute, toggleSpeaker,
+  init, call, answer, hangup, toggleMute, toggleSpeaker,
 } = useSIP()
 
 const { t, setLocale } = usePhoneI18n()
@@ -185,18 +177,25 @@ watch(() => props.locale, val => {
   if (val) setLocale(val)
 }, { immediate: true })
 
-const noticeMessage = computed(() => callNotice.value ? t(callNotice.value) : null)
+const sipDomain = computed(() => new URL(props.sipServerUri).hostname)
+const callError = ref('')
 
-const myExtension  = ref('')
-const otherContacts = ref<Contact[]>([])
-const sipServer    = ref('')
-const target       = ref('')
-const loadError    = ref('')
-const callError    = ref('')
-const dialerOpen   = ref(false)
-const dialerTab    = ref<'recent' | 'keypad' | 'contacts'>('contacts')
+const noticeMessage = computed(() => {
+  if (callNotice.value) return t(callNotice.value)
+  if (callError.value) return t(callError.value)
+  return null
+})
 
-const headerUser = computed(() => ({ ...props.currentUser, extension: myExtension.value }))
+const fabTitle = computed(() => {
+  if (status.value === 'registering' || status.value === 'reconnecting' || status.value === 'error') {
+    return t(`status.${status.value}`)
+  }
+  return t('fabTitle')
+})
+
+const target     = ref('')
+const dialerOpen = ref(false)
+const dialerTab  = ref<'recent' | 'keypad' | 'contacts'>('contacts')
 
 watch(status, val => {
   if (val === 'calling' || val === 'incall' || val === 'ringing') dialerOpen.value = true
@@ -212,17 +211,13 @@ const dialerTitle = computed(() => {
 
 onMounted(async () => {
   try {
-    const { data } = await api.get('/contacts/')
-    otherContacts.value = data
-  } catch {
-    loadError.value = 'errors.loadContacts'
-  }
-
-  try {
-    const { data } = await api.get('/sip/me/')
-    myExtension.value = data.extension
-    sipServer.value    = data.server
-    await init(data)
+    await init({
+      extension:    props.currentUser.extension,
+      password:     props.currentUser.password,
+      server:       sipDomain.value,
+      ws_url:       props.sipServerUri,
+      display_name: props.currentUser.displayName,
+    })
   } catch (e) {
     callError.value = 'errors.sipConnection'
     console.error(e)
@@ -233,7 +228,7 @@ async function makeCall(number: string) {
   if (!number) return
   callError.value = ''
   try {
-    await call(number, sipServer.value)
+    await call(number, sipDomain.value)
   } catch {
     callError.value = 'errors.callFailed'
   }
@@ -243,59 +238,9 @@ function handleContactCall(extension: string) {
   target.value = extension
   makeCall(extension)
 }
-
-function disconnect() {
-  stop()
-  emit('logout')
-}
 </script>
 
 <style scoped>
-.account-card {
-  width: 100%;
-  max-width: 380px;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-}
-
-.account-card-body {
-  padding: 18px 20px;
-}
-
-.error-banner {
-  margin-top: 12px;
-  background: #fdecea;
-  color: #b42318;
-  font-size: 0.78rem;
-  padding: 8px 12px;
-  border-radius: 8px;
-}
-
-.phone-screen {
-  min-height: 100vh;
-  background: #f8f9fa;
-  padding: 24px 16px;
-}
-
-.phone-container {
-  max-width: 480px;
-  margin: 0 auto;
-}
-
-.contact-list-wrap {
-  margin-top: 14px;
-}
-
-.hint-text {
-  margin: 0;
-  text-align: center;
-  font-size: 0.8rem;
-  color: #868e96;
-  padding: 8px 0;
-}
-
 .dialer-popup-header {
   display: flex;
   align-items: center;
@@ -347,6 +292,36 @@ function disconnect() {
 .dialer-fab-active {
   background: #0d6efd;
   animation: pulse-ring 1.4s ease-out infinite;
+}
+.dialer-fab-connecting {
+  background: #adb5bd;
+}
+.dialer-fab-reconnecting {
+  background: #fd7e14;
+  animation: pulse-ring-orange 1.4s ease-out infinite;
+}
+.dialer-fab-error {
+  background: #dc3545;
+}
+@keyframes pulse-ring-orange {
+  0% {
+    box-shadow: 0 0 0 0 rgba(253, 126, 20, 0.45), 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+  100% {
+    box-shadow: 0 0 0 12px rgba(253, 126, 20, 0), 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.fab-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: fab-spin 0.8s linear infinite;
+}
+@keyframes fab-spin {
+  to { transform: rotate(360deg); }
 }
 @keyframes pulse-ring {
   0% {

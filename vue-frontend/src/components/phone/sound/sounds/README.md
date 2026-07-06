@@ -1,7 +1,8 @@
-# Ringtone
+# Sonnerie
 
-Drop a file named `ringtone.mp3` in this folder to override the default
-incoming-call ringtone (see [useRingtone.ts](../useRingtone.ts)).
+Déposez un fichier nommé `ringtone.mp3` dans ce dossier pour remplacer la
+sonnerie d'appel entrant par défaut (voir [useRingtone.ts](../useRingtone.ts)).
 
-If `ringtone.mp3` is missing, or fails to load/decode, the module falls back
-automatically to a generated tone — no code changes needed either way.
+Si `ringtone.mp3` est absent, ou ne peut pas être chargé/décodé, le module
+bascule automatiquement sur une tonalité générée — aucune modification de
+code n'est nécessaire dans un cas comme dans l'autre.

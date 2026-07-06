@@ -33,14 +33,14 @@ def auth_login(request):
     password = request.data.get('password')
     if not username or not password:
         return Response(
-            {'error': 'Identifiant et mot de passe requis'},
+            {'error': 'Username and password are required'},
             status=drf_status.HTTP_400_BAD_REQUEST,
         )
 
     user = authenticate(request, username=username, password=password)
     if user is None:
         return Response(
-            {'error': 'Identifiants invalides'},
+            {'error': 'Invalid credentials'},
             status=drf_status.HTTP_401_UNAUTHORIZED,
         )
 
@@ -64,7 +64,7 @@ def sip_me(request):
     sip_account = getattr(request.user, 'sip_account', None)
     if sip_account is None:
         return Response(
-            {'error': "Aucun compte SIP associé à cet utilisateur"},
+            {'error': "No SIP account associated with this user"},
             status=drf_status.HTTP_404_NOT_FOUND,
         )
 

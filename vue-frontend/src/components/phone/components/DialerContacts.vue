@@ -21,7 +21,7 @@
         <span class="dialer-contact-avatar">
           <IconPerson />
         </span>
-        <span class="dialer-contact-name">{{ c.first_name }} {{ c.last_name }}</span>
+        <span class="dialer-contact-name">{{ c.displayName }}</span>
         <span class="dialer-contact-call">
           <IconCall />
         </span>
@@ -38,9 +38,8 @@ import IconCall    from '../icons/IconCall.vue'
 import { usePhoneI18n } from '../hooks/usePhoneI18n'
 
 interface Contact {
-  first_name: string
-  last_name:  string
-  extension:  string
+  displayName: string
+  extension:   string
 }
 
 const props = defineProps<{ contacts: Contact[] }>()
@@ -54,7 +53,7 @@ const filtered = computed(() => {
   const q = query.value.trim().toLowerCase()
   if (!q) return props.contacts
   return props.contacts.filter(c =>
-    `${c.first_name} ${c.last_name}`.toLowerCase().includes(q) || c.extension.includes(q)
+    c.displayName.toLowerCase().includes(q) || c.extension.includes(q)
   )
 })
 </script>

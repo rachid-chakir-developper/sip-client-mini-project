@@ -1,18 +1,16 @@
 {
-  "title": "SIP Phone",
-  "chooseAccount": "Choose your account",
-  "disconnect": "Disconnect",
   "close": "Close",
   "fabTitle": "Open the dial pad",
   "connectingServer": "Connecting to the SIP server…",
-  "hintUseFab": "Use the call button in the bottom right to dial a number.",
   "status": {
     "disconnected": "Disconnected",
     "registering": "Connecting…",
     "registered": "Available",
     "calling": "Calling",
     "ringing": "Incoming call",
-    "incall": "In call"
+    "incall": "In call",
+    "reconnecting": "Reconnecting…",
+    "error": "SIP connection problem"
   },
   "titles": {
     "call": "Call",
@@ -31,7 +29,6 @@
     "backspace": "Erase"
   },
   "contacts": {
-    "title": "Contacts",
     "searchPlaceholder": "Search a contact…",
     "empty": "No contacts"
   },
@@ -51,7 +48,6 @@
     "unmuteSpeaker": "Unmute sound"
   },
   "errors": {
-    "loadContacts": "Unable to load contacts.",
     "sipConnection": "SIP connection failed.",
     "callFailed": "Unable to place the call."
   },

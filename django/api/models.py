@@ -21,13 +21,13 @@ class SipAccount(models.Model):
     extension = models.CharField(
         max_length=32,
         unique=True,
-        help_text="Doit correspondre à un endpoint déclaré dans asterisk/pjsip.conf",
+        help_text="Must match an endpoint declared in asterisk/pjsip.conf",
     )
     encrypted_password = models.TextField()
 
     class Meta:
-        verbose_name = "Compte SIP"
-        verbose_name_plural = "Comptes SIP"
+        verbose_name = "SIP account"
+        verbose_name_plural = "SIP accounts"
 
     def __str__(self):
         return f"{self.user} <{self.extension}>"
