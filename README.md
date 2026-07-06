@@ -2,9 +2,16 @@
 
 Démo de softphone web basé sur SIP/WebRTC, composée de trois briques :
 
-- **[vue-frontend/](vue-frontend/)** — interface Vue 3 + TypeScript + [sip.js](https://sipjs.com/) : écran de connexion (identifiant/mot de passe), clavier d'appel façon Zoiper (onglets Récents/Clavier/Contacts), gestion des appels entrants/sortants, mute micro/son, timer d'appel.
+- **[vue-frontend/](vue-frontend/)** — interface Vue 3 + TypeScript + [sip.js](https://sipjs.com/) : écran de connexion (identifiant/mot de passe), clavier d'appel façon Zoiper (onglets Récents/Clavier/Contacts), gestion des appels entrants/sortants, mute micro/son, timer d'appel. Le clavier d'appel lui-même est un module autonome et réutilisable — voir sa doc dédiée : [`vue-frontend/src/components/phone/README.md`](vue-frontend/src/components/phone/README.md).
 - **[django/](django/)** — API REST (Django REST Framework) : authentification par session (login/logout), gestion des utilisateurs et de leur compte SIP associé (modèle `SipAccount`, mot de passe SIP chiffré en base), liste de contacts.
 - **[asterisk/](asterisk/)** — configuration PJSIP d'un serveur Asterisk (transport WebSocket pour le navigateur), lancé via Docker.
+
+## Documentation
+
+- **[README.md](README.md)** (ce fichier) — installation, démarrage, création des comptes, test de bout en bout.
+- **[vue-frontend/README.md](vue-frontend/README.md)** — notes génériques du projet Vite/Vue.
+- **[vue-frontend/src/components/phone/README.md](vue-frontend/src/components/phone/README.md)** — le widget d'appel SIP (`SoftphoneWidget`) : fonctionnement, contrat de props, et comment le réutiliser dans une autre application.
+  - **[.../phone/sound/sounds/README.md](vue-frontend/src/components/phone/sound/sounds/README.md)** — personnaliser la sonnerie.
 
 ## Architecture
 

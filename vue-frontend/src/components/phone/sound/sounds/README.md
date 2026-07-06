@@ -1,5 +1,7 @@
 # Sonnerie
 
+> Doc du widget d'appel SIP : [`phone/README.md`](../../README.md).
+
 Déposez un fichier nommé `ringtone.mp3` dans ce dossier pour remplacer la
 sonnerie d'appel entrant par défaut (voir [useRingtone.ts](../useRingtone.ts)).
 

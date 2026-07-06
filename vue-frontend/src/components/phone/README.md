@@ -1,5 +1,7 @@
 # `phone/` — widget d'appel SIP portable
 
+> Doc du projet complet (installation, démarrage, création des comptes) : [README principal](../../../../README.md).
+
 Module Vue 3 + TypeScript + [sip.js](https://sipjs.com/) autonome : un unique
 bouton d'action flottant (en bas à droite) qui ouvre un clavier d'appel
 (onglets clavier / contacts / récents), gère les appels entrants et sortants,
@@ -234,5 +236,6 @@ spécifique à Django.
 - `components/` — clavier, statut d'appel, écrans d'appel entrant, journal
   d'appels (`CallHistory.vue`), l'UI du popup du FAB.
 - `sound/` — générateurs de tonalités sonnerie/rappel/occupé/raccroché/
-  reconnexion + le fichier `ringtone.mp3` fourni.
+  reconnexion + le fichier `ringtone.mp3` fourni (voir
+  [`sound/sounds/README.md`](sound/sounds/README.md) pour le personnaliser).
 - `icons/` — composants SVG inline utilisés par l'UI ci-dessus.
