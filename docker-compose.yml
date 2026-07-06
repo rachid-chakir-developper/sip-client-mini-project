@@ -1,9 +1,9 @@
 version: "3.9"
 
 services:
-  django:
+  backend:
     build: ./django
-    container_name: django_dev
+    container_name: sip-client_backend_dev
     volumes:
       - ./django:/app
     ports:
@@ -12,6 +12,22 @@ services:
       - PYTHONUNBUFFERED=1
     command: python manage.py runserver 0.0.0.0:8000
     depends_on:
+      - asterisk
+  
+  frontend:
+    build: ./vue-frontend
+    container_name: sip-client_frontend_dev
+    environment:
+      VITE_API_PROXY_TARGET: http://backend:8000
+      VITE_WS_PROXY_TARGET: ws://backend:8000
+      VITE_USE_POLLING: "true"
+    volumes:
+      - ./vue-frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
       - asterisk
 
   asterisk:

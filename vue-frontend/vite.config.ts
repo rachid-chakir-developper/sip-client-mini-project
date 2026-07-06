@@ -11,9 +11,12 @@ export default defineConfig({
     },
   },
   server: {
+    watch: {
+      usePolling: process.env.VITE_USE_POLLING === 'true',
+    },
     proxy: {
       '/api': {
-        target: 'http://localhost:9090',
+        target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:9090',
         changeOrigin: true,
       },
     },

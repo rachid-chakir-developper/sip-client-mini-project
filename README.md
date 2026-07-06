@@ -10,9 +10,9 @@ Démo de softphone web basé sur SIP/WebRTC, composée de trois briques :
 
 ```
 Navigateur (Vue + sip.js)
-   │  HTTP /api/*  (proxy Vite → :9090)
+   │  HTTP /api/*  (proxy Vite → backend:8000, exposé sur :3000)
    ▼
-Django REST API (:9090 → conteneur :8000)
+Django REST API (conteneur backend:8000, publié sur :9090)
    │  renvoie les identifiants SIP du compte choisi
    ▼
 Navigateur ── WebSocket SIP (ws://localhost:8088/ws) ──▶ Asterisk (PJSIP)
@@ -21,9 +21,9 @@ Navigateur ── WebSocket SIP (ws://localhost:8088/ws) ──▶ Asterisk (PJS
 ## Prérequis
 
 - [Git](https://git-scm.com/)
-- [Docker](https://www.docker.com/) + Docker Compose (pour Asterisk + Django)
-- [Node.js](https://nodejs.org/) ≥ 18 (LTS) et npm (pour le frontend)
+- [Docker](https://www.docker.com/) + Docker Compose (pour Django, Asterisk et le frontend)
 - Un navigateur récent (Chrome, Edge, Firefox…) avec accès au micro — WebRTC requis
+- [Node.js](https://nodejs.org/) ≥ 18 (LTS) et npm — uniquement si vous préférez lancer le frontend hors Docker (voir plus bas)
 
 ## 1. Cloner le projet
 
@@ -32,7 +32,7 @@ git clone https://github.com/rachid-chakir-developper/sip-client-mini-project.gi
 cd "sip-client-mini-project"
 ```
 
-## 2. Démarrer le backend (Django + Asterisk)
+## 2. Démarrer l'application (Docker Compose)
 
 ```bash
 docker-compose up --build
@@ -41,19 +41,22 @@ docker-compose up --build
 Cela démarre :
 
 - **asterisk** — serveur PBX, WebSocket SIP exposé sur `ws://localhost:8088/ws`
-- **django** — API REST exposée sur `http://localhost:9090/api/`
+- **backend** — API REST Django exposée sur `http://localhost:9090/api/`
+- **frontend** — serveur de dev Vue/Vite exposé sur `http://localhost:3000`
 
 Laissez ce terminal ouvert (`Ctrl+C` pour arrêter les conteneurs).
 
 Optionnel — lancer les migrations Django (utile pour `/admin/`, pas nécessaire pour l'API de démo qui ne touche pas la base) :
 
 ```bash
-docker-compose exec django python manage.py migrate
+docker-compose exec backend python manage.py migrate
 ```
 
-## 3. Démarrer le frontend (Vue)
+L'application est accessible sur **http://localhost:3000**. Le serveur Vite (dans le conteneur `frontend`) proxifie les appels `/api` vers `http://backend:8000` (voir [vite.config.ts](vue-frontend/vite.config.ts) et les variables `VITE_API_PROXY_TARGET`/`VITE_WS_PROXY_TARGET` du [docker-compose.yml](docker-compose.yml)).
 
-Dans un second terminal :
+### Alternative — lancer le frontend hors Docker
+
+Si vous préférez ne pas conteneuriser le frontend, retirez/arrêtez le service `frontend` (`docker-compose up --build backend asterisk`) et lancez-le en local :
 
 ```bash
 cd vue-frontend
@@ -61,9 +64,9 @@ npm install
 npm run dev
 ```
 
-L'application est accessible sur **http://localhost:3000**. Le serveur Vite proxifie les appels `/api` vers `http://localhost:9090` (voir [vite.config.ts](vue-frontend/vite.config.ts)).
+L'application est alors accessible sur **http://localhost:3000**, avec le proxy `/api` pointant par défaut sur `http://localhost:9090` (le port publié par le conteneur `backend`).
 
-## 4. Tester l'application
+## 3. Tester l'application
 
 Trois comptes de démo sont préconfigurés à l'identique côté Django (`django/api/users.py`) et Asterisk (`asterisk/pjsip.conf`) :
 
@@ -75,7 +78,7 @@ Trois comptes de démo sont préconfigurés à l'identique côté Django (`djang
 
 Pour simuler un appel entre deux comptes :
 
-1. Ouvrez **http://localhost:3000** dans deux fenêtres/navigateurs différents (ex. une fenêtre normale + une fenêtre de navigation privée, pour éviter que les deux onglets partagent la même session).
+1. Ouvrez **http://localhost:3000** (ou `http://localhost:3000` si vous lancez le frontend hors Docker) dans deux fenêtres/navigateurs différents (ex. une fenêtre normale + une fenêtre de navigation privée, pour éviter que les deux onglets partagent la même session).
 2. Dans chaque fenêtre, choisissez un compte différent (ex. Alice dans l'une, Bob dans l'autre).
 3. Autorisez l'accès au micro quand le navigateur le demande.
 4. Une fois les deux comptes affichés comme "Disponible", ouvrez le bouton d'appel flottant (FAB, en bas à droite) dans la fenêtre d'Alice : onglet **Contacts** pour appeler Bob directement, ou onglet **Clavier** pour composer l'extension `005`.
@@ -85,7 +88,7 @@ Pour simuler un appel entre deux comptes :
 Il n'existe pas encore de suite de tests automatisés pour ce projet. Un test de démarrage minimal côté Django (le fichier `api/tests.py` est vide, mais la commande valide que le projet démarre correctement) :
 
 ```bash
-docker-compose exec django python manage.py test
+docker-compose exec backend python manage.py test
 ```
 
 ## Notes / limites
@@ -96,6 +99,6 @@ docker-compose exec django python manage.py test
 
 ## Dépannage
 
-- **Pas de son / micro non détecté** : vérifiez que le navigateur a bien l'autorisation micro pour `localhost:3000`.
+- **Pas de son / micro non détecté** : vérifiez que le navigateur a bien l'autorisation micro pour `localhost:3000` (ou `localhost:3000` en mode sans Docker).
 - **L'appel ne passe pas** : vérifiez que le conteneur `asterisk` est démarré (`docker compose ps`) et que les ports UDP `5060` et `10000-10100` ne sont pas bloqués par un pare-feu.
-- **Erreur réseau sur les appels `/api/...`** : vérifiez que Django tourne bien sur `http://localhost:9090` (`docker compose ps`, `docker compose logs django`).
+- **Erreur réseau sur les appels `/api/...`** : vérifiez que Django tourne bien sur `http://localhost:9090` (`docker compose ps`, `docker compose logs backend`).
