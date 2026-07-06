@@ -24,6 +24,13 @@
     "contacts": "Contacts"
   },
   "recentEmpty": "Aucun appel récent",
+  "history": {
+    "incoming": "Appel entrant",
+    "outgoing": "Appel sortant",
+    "missed": "Appel manqué",
+    "clear": "Effacer",
+    "delete": "Supprimer"
+  },
   "dialer": {
     "placeholder": "Composer un numéro",
     "backspace": "Effacer"

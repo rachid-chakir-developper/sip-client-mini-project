@@ -22,6 +22,17 @@ interface SIPCredentials {
   display_name?: string
 }
 
+export interface CallHistoryEntry {
+  id:         string
+  direction: 'incoming' | 'outgoing' | 'missed'
+  extension:  string
+  callerName: string | null
+  timestamp:  number
+  duration:   number | null
+}
+
+const HISTORY_LIMIT = 30
+
 export function useSIP() {
   const ua            = ref<UserAgent | null>(null)
   const session       = ref<Session | null>(null)
@@ -32,8 +43,48 @@ export function useSIP() {
   const callStartedAt = ref<number | null>(null)
   const answering     = ref(false)
   const callNotice    = ref<string | null>(null)
+  const history       = ref<CallHistoryEntry[]>([])
 
   let noticeTimer: ReturnType<typeof setTimeout> | null = null
+  let historyStorageKey = ''
+
+  // Purely client-side call log (last 30 calls), scoped per extension so a
+  // shared browser never mixes histories between SIP accounts. No backend
+  // involved — this is the whole point of keeping the widget backend-agnostic.
+  function loadHistory(extension: string): void {
+    historyStorageKey = `sip-phone:history:${extension}`
+    try {
+      const raw = localStorage.getItem(historyStorageKey)
+      history.value = raw ? JSON.parse(raw) : []
+    } catch {
+      history.value = []
+    }
+  }
+
+  function persistHistory(): void {
+    if (!historyStorageKey) return
+    try {
+      localStorage.setItem(historyStorageKey, JSON.stringify(history.value))
+    } catch {
+      // Storage full/unavailable (e.g. private browsing) — history just
+      // won't persist across reloads, which is a fine degradation.
+    }
+  }
+
+  function pushHistoryEntry(entry: CallHistoryEntry): void {
+    history.value = [entry, ...history.value].slice(0, HISTORY_LIMIT)
+    persistHistory()
+  }
+
+  function deleteHistoryEntry(id: string): void {
+    history.value = history.value.filter(e => e.id !== id)
+    persistHistory()
+  }
+
+  function clearHistory(): void {
+    history.value = []
+    persistHistory()
+  }
 
   // Shows a self-dismissing banner (i18n key), like a phone's "Busy" / "Call
   // declined" toast. `durationMs` controls how long it stays visible.
@@ -186,6 +237,8 @@ export function useSIP() {
   async function init(credentials: SIPCredentials): Promise<void> {
     const { extension, password, server, ws_url, display_name } = credentials
 
+    loadHistory(extension)
+
     ua.value = new UserAgent({
       uri:              UserAgent.makeURI(`sip:${extension}@${server}`)!,
       displayName:      display_name ?? extension,
@@ -225,11 +278,13 @@ export function useSIP() {
         }
       },
       onInvite(invitation: Invitation) {
+        const startedAt      = Date.now()
+        const remoteExtension = invitation.remoteIdentity?.uri?.user || ''
+        const remoteName      = invitation.remoteIdentity?.displayName || null
+
         session.value = invitation
         status.value  = 'ringing'
-        caller.value  = invitation.remoteIdentity?.displayName
-          || invitation.remoteIdentity?.uri?.user
-          || ''
+        caller.value  = remoteName || remoteExtension
         ringtone.start()
 
         invitation.stateChange.addListener((state: SessionState) => {
@@ -242,6 +297,14 @@ export function useSIP() {
           if (state === SessionState.Terminated) {
             ringtone.stop()
             if (status.value === 'incall') hangupTone.start()
+            pushHistoryEntry({
+              id:         crypto.randomUUID(),
+              direction:  callStartedAt.value ? 'incoming' : 'missed',
+              extension:  remoteExtension || caller.value,
+              callerName: remoteName,
+              timestamp:  startedAt,
+              duration:   callStartedAt.value ? Math.round((Date.now() - callStartedAt.value) / 1000) : null,
+            })
             status.value        = 'registered'
             session.value       = null
             caller.value        = ''
@@ -264,6 +327,8 @@ export function useSIP() {
     if (!ua.value) return
     busyTone.stop()
 
+    const startedAt = Date.now()
+
     const inviter = new Inviter(
       ua.value,
       UserAgent.makeURI(`sip:${target}@${server}`)!,
@@ -279,6 +344,14 @@ export function useSIP() {
       if (state === SessionState.Terminated) {
         ringbackTone.stop()
         if (status.value === 'incall') hangupTone.start()
+        pushHistoryEntry({
+          id:         crypto.randomUUID(),
+          direction:  'outgoing',
+          extension:  target,
+          callerName: null,
+          timestamp:  startedAt,
+          duration:   callStartedAt.value ? Math.round((Date.now() - callStartedAt.value) / 1000) : null,
+        })
         status.value         = 'registered'
         session.value        = null
         callStartedAt.value  = null
@@ -389,7 +462,8 @@ export function useSIP() {
   })
 
   return {
-    status, caller, muted, speakerMuted, callStartedAt, answering, callNotice,
+    status, caller, muted, speakerMuted, callStartedAt, answering, callNotice, history,
     init, call, answer, hangup, stop, toggleMute, toggleSpeaker,
+    deleteHistoryEntry, clearHistory,
   }
 }

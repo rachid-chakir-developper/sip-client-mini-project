@@ -54,9 +54,14 @@
             @call="makeCall"
           />
 
-          <p v-if="dialerTab === 'recent'" class="dialer-empty">
-            {{ t('recentEmpty') }}
-          </p>
+          <CallHistory
+            v-if="dialerTab === 'recent'"
+            :entries="history"
+            :contacts="contacts"
+            @call="handleContactCall"
+            @delete="deleteHistoryEntry"
+            @clear="clearHistory"
+          />
 
           <div class="dialer-tabs">
             <button
@@ -130,6 +135,7 @@ import { usePhoneI18n } from './hooks/usePhoneI18n'
 
 import Dialer              from './components/Dialer.vue'
 import CallStatus          from './components/CallStatus.vue'
+import CallHistory         from './components/CallHistory.vue'
 import DialerContacts      from './components/DialerContacts.vue'
 import IncomingCallPopup   from './components/IncomingCallPopup.vue'
 import IncomingCallScreen  from './components/IncomingCallScreen.vue'
@@ -167,8 +173,9 @@ const props = defineProps<{
 }>()
 
 const {
-  status, caller, muted, speakerMuted, callStartedAt, answering, callNotice,
+  status, caller, muted, speakerMuted, callStartedAt, answering, callNotice, history,
   init, call, answer, hangup, toggleMute, toggleSpeaker,
+  deleteHistoryEntry, clearHistory,
 } = useSIP()
 
 const { t, setLocale } = usePhoneI18n()
@@ -258,14 +265,6 @@ function handleContactCall(extension: string) {
   font-size: 0.8rem;
   color: #868e96;
   padding: 14px 0;
-}
-
-.dialer-empty {
-  text-align: center;
-  font-size: 0.8rem;
-  color: #868e96;
-  padding: 18px 0;
-  margin: 0;
 }
 
 .dialer-fab {

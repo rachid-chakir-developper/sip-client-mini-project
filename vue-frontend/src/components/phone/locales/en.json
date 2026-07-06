@@ -24,6 +24,13 @@
     "contacts": "Contacts"
   },
   "recentEmpty": "No recent calls",
+  "history": {
+    "incoming": "Incoming call",
+    "outgoing": "Outgoing call",
+    "missed": "Missed call",
+    "clear": "Clear",
+    "delete": "Delete"
+  },
   "dialer": {
     "placeholder": "Dial a number",
     "backspace": "Erase"

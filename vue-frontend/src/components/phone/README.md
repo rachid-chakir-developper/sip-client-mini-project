@@ -4,9 +4,18 @@ Module Vue 3 + TypeScript + [sip.js](https://sipjs.com/) autonome : un unique
 bouton d'action flottant (en bas à droite) qui ouvre un clavier d'appel
 (onglets clavier / contacts / récents), gère les appels entrants et sortants,
 le mute micro/haut-parleur, le chronomètre d'appel, les tonalités de
-sonnerie/rappel/occupé/raccroché. Il ne rend aucune mise en page propre —
-c'est une surcouche flottante, qu'on peut monter une seule fois à la racine
-d'une application hôte et laisser visible sur tous les écrans/routes.
+sonnerie/rappel/occupé/raccroché, et un journal des 30 derniers appels
+(entrants/sortants/manqués) stocké localement dans le navigateur. Il ne rend
+aucune mise en page propre — c'est une surcouche flottante, qu'on peut monter
+une seule fois à la racine d'une application hôte et laisser visible sur tous
+les écrans/routes.
+
+Le journal d'appels (onglet « Récents ») est **entièrement côté front** :
+persisté dans `localStorage`, sous une clé propre à l'extension SIP de
+l'utilisateur connecté (`sip-phone:history:{extension}`), plafonné aux 30
+dernières entrées, sans aucun appel réseau ni backend impliqué. Cliquer sur
+une entrée rappelle directement ce numéro ; chaque entrée peut aussi être
+supprimée individuellement, ou tout le journal effacé en un clic.
 
 Le FAB reflète en permanence l'état de santé de l'enregistrement SIP, pour
 que l'utilisateur ait un retour visuel sans avoir à ouvrir le clavier :
@@ -217,12 +226,13 @@ spécifique à Django.
   ici** ; voir « Intégrer `<SoftphoneWidgetContainer />` dans une application
   déjà existante » plus haut.
 - `hooks/useSIP.ts` — encapsulation de sip.js : enregistrement, appels, mute,
-  tonalités.
+  tonalités, et le journal d'appels (`history`, persisté en `localStorage`,
+  voir plus haut).
 - `hooks/usePhoneI18n.ts` + `locales/*.json` — i18n propre à ce module
   (volontairement séparée de l'i18n de l'application hôte, pour que ce
   dossier reste copiable tel quel).
-- `components/` — clavier, statut d'appel, écrans d'appel entrant, l'UI du
-  popup du FAB.
+- `components/` — clavier, statut d'appel, écrans d'appel entrant, journal
+  d'appels (`CallHistory.vue`), l'UI du popup du FAB.
 - `sound/` — générateurs de tonalités sonnerie/rappel/occupé/raccroché/
   reconnexion + le fichier `ringtone.mp3` fourni.
 - `icons/` — composants SVG inline utilisés par l'UI ci-dessus.
