@@ -61,7 +61,10 @@ const { t, locale } = usePhoneI18n()
 
 function displayName(entry: CallHistoryEntry): string {
   const contact = props.contacts.find(c => c.extension === entry.extension)
-  return contact?.displayName || entry.callerName || entry.extension
+  // Falls through to the raw number for callers outside the contacts list
+  // (door intercoms, other physical SIP devices…), and finally to a generic
+  // label if even that's missing.
+  return contact?.displayName || entry.callerName || entry.extension || t('call.unknownNumber')
 }
 
 function formatTime(timestamp: number): string {
