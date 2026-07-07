@@ -95,11 +95,35 @@ Le mot de passe SIP est stocké chiffré en base (voir `django/api/models.py` /
 Trois endpoints de démo sont préconfigurés côté Asterisk
 (`asterisk/pjsip.conf`), tous avec le mot de passe `my_password` :
 
-| Extension | Mot de passe SIP |
-|-----------|-------------------|
-| 004       | my_password       |
-| 005       | my_password       |
-| 006       | my_password       |
+| Extension | Mot de passe SIP | Transport   | Client attendu                  |
+|-----------|-------------------|-------------|----------------------------------|
+| 004       | my_password       | WebSocket   | Navigateur (ce projet, sip.js)   |
+| 005       | my_password       | WebSocket   | Navigateur (ce projet, sip.js)   |
+| 006       | my_password       | UDP         | Softphone SIP classique (Zoiper) |
+
+### Se connecter avec un softphone SIP classique (Zoiper) — compte 006
+
+L'endpoint `006` utilise le template `ep_user` (transport UDP, port `5060`,
+sans WebRTC/chiffrement forcé) — c'est le compte prévu pour un softphone SIP
+« normal » comme [Zoiper](https://www.zoiper.com/), pas pour le navigateur.
+Dans Zoiper, créez un compte **SIP** (pas WebRTC) avec :
+
+- **Nom d'hôte/domaine** : l'IP de la machine qui héberge le conteneur
+  `asterisk` (`127.0.0.1`/`localhost` si Zoiper tourne sur la même machine)
+- **Port** : `5060`
+- **Transport** : `UDP`
+- **Nom d'utilisateur** : `006`
+- **Mot de passe** : `my_password`
+
+> ⚠️ **Limitation connue sous Docker Desktop pour Windows** : si Zoiper et le
+> navigateur tournent tous les deux sur la même machine Windows via
+> `127.0.0.1`, l'audio peut ne circuler que dans un seul sens (ou pas du
+> tout), à cause de la couche réseau virtuelle de Docker Desktop
+> (WSL2/Hyper-V) qui perturbe le RTP en boucle locale. Ce n'est pas un bug de
+> `pjsip.conf` : un serveur Asterisk sur un vrai Linux (VM, WSL2 natif sans
+> Docker Desktop, etc.) n'a pas ce problème. Pour tester l'audio de bout en
+> bout de façon fiable en local, lancez `docker compose` depuis un terminal
+> WSL2 plutôt que depuis Docker Desktop Windows.
 
 ## 4. Tester l'application
 
